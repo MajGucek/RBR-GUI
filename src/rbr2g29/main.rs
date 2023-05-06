@@ -21,13 +21,13 @@ fn read_telemetry_and_update(device: HidDevice) -> DR2G27Result {
 
 fn device_connected(hid: &HidApi) -> Option<DeviceInfo> {
     println!("Looking for devices...");
-    for device in hid.device_list() {
-        if device.product_id() == G29_PID && device.vendor_id() == LOGITECH_VID && device.interface_number() == 0 {
-            println!("Found G29");
+    for device in hid.device_list() {      
+        if device.product_id() == G27_PID && device.vendor_id() == LOGITECH_VID {
+            println!("Found G27: {}", device.interface_number());            
             return Some(device.clone());
         }
-        if device.product_id() == G27_PID && device.vendor_id() == LOGITECH_VID && device.interface_number() == 0 {
-            println!("Found G27");
+        if device.product_id() == G29_PID && device.vendor_id() == LOGITECH_VID && device.interface_number() == 0 {
+            println!("Found G29");
             return Some(device.clone());
         }
     }
