@@ -7,6 +7,8 @@ pub struct LEDS {
     device: HidDevice,
     rpm: RPM,
     state: u8,
+    flash_toggled: bool,
+    flash_timer: u8,
 }
 
 impl LEDS {
@@ -15,6 +17,8 @@ impl LEDS {
             device: device,
             rpm: RPM::new(),
             state: 0,
+            flash_toggled: false,
+            flash_timer: 0,
         }
     }
 
@@ -55,13 +59,47 @@ impl LEDS {
     pub fn update(&mut self, data: &[u8]) -> DR2G27Result {
         self.rpm.update(data);
 
-        if !self.rpm.is_stale() {
-            let new_state = self.new_led_state();
-            if new_state != self.state {
-                self.update_device_and_state(new_state)?;
-            }
-        } else if self.state != 0 {
-            self.update_device_and_state(0)?;
+        let new_state = self.new_led_state();
+        if new_state != self.state {
+            self.update_device_and_state(new_state)?;
+        }
+        if self.state == 31 {
+            self.flash_leds()?
+        }
+
+        Ok(())
+    }
+
+    const FLASHING_THRESHOLD: u8 = 2;
+    fn increment_flash_timer(&mut self) {
+        if self.flash_timer < Self::FLASHING_THRESHOLD {
+            self.flash_timer += 1;
+        }
+    }
+
+    fn reset_flash_timer(&mut self) {
+        if self.flash_timer != 0 {
+            self.flash_timer = 0;
+        }
+    }
+
+    pub fn should_toggle_flash(&self) -> bool {
+        self.flash_timer >= Self::FLASHING_THRESHOLD
+    }
+
+    fn flash_leds(&mut self) -> DR2G27Result {
+        self.increment_flash_timer();
+
+        if self.state == 31 && !self.flash_toggled && self.should_toggle_flash() {
+            self.device.write(&Self::led_state_payload(0))?;
+            self.flash_toggled = true;
+            self.reset_flash_timer()
+        }
+        if self.flash_toggled && self.should_toggle_flash() {
+            self.device.write(&Self::led_state_payload(31))?;
+
+            self.flash_toggled = false;
+            self.reset_flash_timer()
         }
 
         Ok(())

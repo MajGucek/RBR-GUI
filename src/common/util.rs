@@ -6,7 +6,8 @@ use winapi::um::winuser::{SetWindowTextA, ShowWindow};
 
 // [GREEN_1, GREEN_2, ORANGE_4, ORANGE_8, RED_16]
 
-pub const G27_VID: u16 = 1133; // Vendor ID
+pub const LOGITECH_VID: u16 = 1133; // Vendor ID
+pub const G29_PID: u16 = 49743; // Product ID
 pub const G27_PID: u16 = 49819; // Product ID
 
 pub type DR2G27Result = Result<(), DR2G27Error>;
