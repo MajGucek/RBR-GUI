@@ -1,5 +1,8 @@
 use serde::Deserialize;
 
+// Telemetry data is ported from the NGP rbr.telemetry.data.TelemetryData.h header
+// that is part of the NGP plugin.
+
 #[derive(Deserialize, Debug)]
 pub struct Stage {
     pub index: i32,

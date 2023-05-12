@@ -3,4 +3,5 @@ pub mod common {
     pub mod rpm;
     pub mod util;
     pub mod telemetry;
+    pub mod rbr;
 }

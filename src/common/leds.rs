@@ -1,7 +1,8 @@
 use crate::common::rpm::RPM;
-use crate::common::util::DR2G27Result;
 use core::u8::{MAX, MIN};
 use hidapi::HidDevice;
+
+use super::util::RBR2G29Result;
 
 pub struct LEDS {
     device: HidDevice,
@@ -49,14 +50,14 @@ impl LEDS {
         }
     }
 
-    fn update_device_and_state(&mut self, new_state: u8) -> DR2G27Result {
+    fn update_device_and_state(&mut self, new_state: u8) -> RBR2G29Result {
         self.device.write(&Self::led_state_payload(new_state))?;
         self.state = new_state;
 
         Ok(())
     }
 
-    pub fn update(&mut self, data: &[u8]) -> DR2G27Result {
+    pub fn update(&mut self, data: &[u8]) -> RBR2G29Result {
         self.rpm.update(data);
 
         let new_state = self.new_led_state();
@@ -87,7 +88,7 @@ impl LEDS {
         self.flash_timer >= Self::FLASHING_THRESHOLD
     }
 
-    fn flash_leds(&mut self) -> DR2G27Result {
+    fn flash_leds(&mut self) -> RBR2G29Result {
         self.increment_flash_timer();
 
         if self.state == 31 && !self.flash_toggled && self.should_toggle_flash() {
