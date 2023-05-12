@@ -9,13 +9,26 @@ fn read_telemetry_and_update(device: HidDevice) -> RBR2G29Result {
     let socket = UdpSocket::bind("127.0.0.1:6776")?;
     let mut leds = LEDS::new(device);
     let mut data = [0; 664];
+    let mut rbr = rbr2g29::common::rbr::RBR::new();
 
     loop {
+       match rbr.initialize() {
+        Err(error) => {
+                println!("{:?}", error);
+            }
+        _ => break,
+    }
+
+        sleep(Duration::from_secs(1));      
+    }
+    
+
+    loop {        
         match socket.recv(&mut data) {
             Ok(_) => {}
             Err(e) => println!("recv function failed: {e:?}"),
         }
-        leds.update(&data)?;
+        leds.update(&data, &rbr)?;
     }
 }
 

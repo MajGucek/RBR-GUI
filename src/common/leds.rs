@@ -2,7 +2,7 @@ use crate::common::rpm::RPM;
 use core::u8::{MAX, MIN};
 use hidapi::HidDevice;
 
-use super::util::RBR2G29Result;
+use super::{util::RBR2G29Result, rbr::RBR};
 
 pub struct LEDS {
     device: HidDevice,
@@ -57,8 +57,8 @@ impl LEDS {
         Ok(())
     }
 
-    pub fn update(&mut self, data: &[u8]) -> RBR2G29Result {
-        self.rpm.update(data);
+    pub fn update(&mut self, data: &[u8], rbr: &RBR) -> RBR2G29Result {
+        self.rpm.update(data, rbr);
 
         let new_state = self.new_led_state();
         if new_state != self.state {

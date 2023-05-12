@@ -12,6 +12,7 @@ pub type RBR2G29Result = Result<(), RBR2G29Error>;
 pub enum RBR2G29Error {
     UdpConnectionError,
     DeviceConnectionLostError,
+    RbrProcessNotFound,
 }
 
 impl From<Error> for RBR2G29Error {

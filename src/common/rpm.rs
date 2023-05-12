@@ -1,4 +1,5 @@
 use crate::common::telemetry::Telemetry;
+use crate::common::rbr::RBR;
 use bincode::deserialize;
 
 #[derive(Default)]
@@ -7,7 +8,7 @@ pub struct RPM {
     idle: f32,
     car: i32,
     gear: i32,
-    max: f32,
+    max: f32,    
 }
 
 
@@ -26,13 +27,19 @@ impl RPM {
         (self.current, self.max * 0.95, self.idle)
     }
 
-    pub fn update(&mut self, data: &[u8]) {
+    pub fn update(&mut self, data: &[u8], rbr: &RBR) {
         let telemetry: Telemetry = deserialize(&data).unwrap();
         let current_rpm = telemetry.car.engine.rpm;
 
         if self.car != telemetry.car.index {
             println!("Car change detected");
             self.car = telemetry.car.index;
+            let path = rbr.build_physics_path(self.car);
+            if let Some(p) = path{
+                let gears = RBR::read_rpm_values_from_file(p);
+                println!("found gear map {}", gears.gear0_downshift);
+            }
+
             self.max = 5000.0;
         }
         if self.gear != telemetry.control.gear {
