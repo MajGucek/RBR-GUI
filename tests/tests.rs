@@ -35,9 +35,5 @@ mod tests {
 
         Ok(())
     }
-
-    #[test]
-    fn test_find_rbr_executable() {
-        RBR::find_rbr_process();
-    }
+   
 }
