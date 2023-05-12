@@ -59,12 +59,13 @@ impl LEDS {
 
     pub fn update(&mut self, data: &[u8], rbr: &RBR) -> RBR2G29Result {
         self.rpm.update(data, rbr);
-
+        
         let new_state = self.new_led_state();
         if new_state != self.state {
             self.update_device_and_state(new_state)?;
         }
-        if self.state == 31 {
+        let (rpm_current, rpm_max, _) = self.rpm.state();
+        if rpm_current >= rpm_max   {
             self.flash_leds()?
         }
 

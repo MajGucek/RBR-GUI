@@ -55,23 +55,7 @@ impl RBR {
         let file = File::open(path.join("common.lsp")).unwrap();
         let reader = BufReader::new(file).lines();
 
-        let mut rpms = GearMap {
-            gear0_upshift: 0.0,
-            gear0_downshift: 0.0,
-            gear1_upshift: 0.0,
-            gear1_downshift: 0.0,
-            gear2_upshift: 0.0,
-            gear2_downshift: 0.0,
-            gear3_upshift: 0.0,
-            gear3_downshift: 0.0,
-            gear4_upshift: 0.0,
-            gear4_downshift: 0.0,
-            gear5_upshift: 0.0,
-            gear5_downshift: 0.0,
-            gear6_upshift: 0.0,
-            gear6_downshift: 0.0,
-            rpm_limit: 0.0,
-        };
+        let mut rpms = GearMap::default();
 
         for line in reader {
             let line = line.unwrap().to_lowercase();
