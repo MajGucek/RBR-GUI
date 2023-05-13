@@ -15,19 +15,17 @@ fn read_telemetry_and_update(device: HidDevice) -> RBR2G29Result {
         match rbr.initialize() {
             Err(error) => {
                 println!("{:?}", error);
+                sleep(Duration::from_secs(1));
             }
             _ => break,
-        }
-
-        sleep(Duration::from_secs(1));
+        }        
     }
 
     loop {
         match socket.recv(&mut data) {
-            Ok(_) => {}
+            Ok(_) => leds.update(&data, &rbr)?,
             Err(e) => println!("recv function failed: {e:?}"),
-        }
-        leds.update(&data, &rbr)?;
+        };
     }
 }
 
@@ -47,7 +45,7 @@ fn device_connected(hid: &HidApi) -> Option<DeviceInfo> {
         if (device.product_id() == G29_PID || device.product_id() == G920_PID)
             && device.interface_number() == 0
         {
-            println!("Found G29/G920");
+            println!("Found G29");
             return Some(device.clone());
         }
     }

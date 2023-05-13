@@ -72,7 +72,7 @@ impl LEDS {
         Ok(())
     }
 
-    const FLASHING_THRESHOLD: u8 = 2;
+    const FLASHING_THRESHOLD: u8 = 5;
     fn increment_flash_timer(&mut self) {
         if self.flash_timer < Self::FLASHING_THRESHOLD {
             self.flash_timer += 1;

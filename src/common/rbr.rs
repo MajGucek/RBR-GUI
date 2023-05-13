@@ -1,7 +1,7 @@
 use std::{
     fs::File,
     io::{BufRead, BufReader},
-    path::{Path, PathBuf},
+    path::{PathBuf},
 };
 
 use sysinfo::{ProcessExt, System, SystemExt};
@@ -13,7 +13,7 @@ use crate::common::util::{RBR2G29Error, RBR2G29Result};
 
 pub struct RBR {
     path: Option<std::path::PathBuf>,
-    carFolders: CarFolders,
+    car_folders: CarFolders,
 }
 
 const RBR_PROCESS_NAME: &'static str = "RichardBurnsRally_SSE.exe";
@@ -21,7 +21,7 @@ impl RBR {
     pub fn new() -> Self {
         RBR {
             path: None,
-            carFolders: CarFolders::new(),
+            car_folders: CarFolders::new(),
         }
     }
 
@@ -43,7 +43,7 @@ impl RBR {
 
     pub fn build_physics_path(&self, car_id: i32) -> Option<PathBuf> {
         if let Some(p) = &self.path {
-            if let Some(f) = self.carFolders.resolve_value(car_id) {
+            if let Some(f) = self.car_folders.resolve_value(car_id) {
                 return Some(p.join("Physics").join(f));
             }
         }
@@ -60,31 +60,31 @@ impl RBR {
         for line in reader {
             let line = line.unwrap().to_lowercase();
             if line.contains("gear") | line.contains("rpmlimit") {
-                let lineContents = line.split_whitespace();
-                let parts = lineContents.collect::<Vec<&str>>();                
+                let line_contents = line.split_whitespace();
+                let parts = line_contents.collect::<Vec<&str>>();                
 
-                if(parts.len() != 2){
+                if parts.len() != 2 {
                     continue;
                 } 
 
-                let gearIdentifier = parts[0].trim();
-                let rpmValue: f32 = parts[1].trim().parse().unwrap();
-                match gearIdentifier {                    
-                    "gear0upshift" => rpms.gear0_upshift = rpmValue,
-                    "gear0downshift" => rpms.gear0_downshift = rpmValue,
-                    "gear1upshift" => rpms.gear1_upshift = rpmValue,
-                    "gear1downshift" => rpms.gear1_downshift = rpmValue,
-                    "gear2upshift" => rpms.gear2_upshift = rpmValue,
-                    "gear2downshift" => rpms.gear2_downshift = rpmValue,
-                    "gear3upshift" => rpms.gear3_upshift = rpmValue,
-                    "gear3downshift" => rpms.gear3_downshift = rpmValue,
-                    "gear4upshift" => rpms.gear4_upshift = rpmValue,
-                    "gear4downshift" => rpms.gear4_downshift = rpmValue,
-                    "gear5upshift" => rpms.gear5_upshift = rpmValue,
-                    "gear5downshift" => rpms.gear5_downshift = rpmValue,
-                    "gear6upshift" => rpms.gear6_upshift = rpmValue,
-                    "gear6downshift" => rpms.gear6_downshift = rpmValue,
-                    "rpmlimit" => rpms.rpm_limit = rpmValue,
+                let gear_identifier = parts[0].trim();
+                let rpm_value: f32 = parts[1].trim().parse().unwrap();
+                match gear_identifier {                    
+                    "gear0upshift" => rpms.gear0_upshift = rpm_value,
+                    "gear0downshift" => rpms.gear0_downshift = rpm_value,
+                    "gear1upshift" => rpms.gear1_upshift = rpm_value,
+                    "gear1downshift" => rpms.gear1_downshift = rpm_value,
+                    "gear2upshift" => rpms.gear2_upshift = rpm_value,
+                    "gear2downshift" => rpms.gear2_downshift = rpm_value,
+                    "gear3upshift" => rpms.gear3_upshift = rpm_value,
+                    "gear3downshift" => rpms.gear3_downshift = rpm_value,
+                    "gear4upshift" => rpms.gear4_upshift = rpm_value,
+                    "gear4downshift" => rpms.gear4_downshift = rpm_value,
+                    "gear5upshift" => rpms.gear5_upshift = rpm_value,
+                    "gear5downshift" => rpms.gear5_downshift = rpm_value,
+                    "gear6upshift" => rpms.gear6_upshift = rpm_value,
+                    "gear6downshift" => rpms.gear6_downshift = rpm_value,
+                    "rpmlimit" => rpms.rpm_limit = rpm_value,
                     
                     _ => {}
                 }
