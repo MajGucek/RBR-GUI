@@ -35,8 +35,8 @@ impl RPM {
         let telemetry: Telemetry = deserialize(&data).unwrap();
         let current_rpm = telemetry.car.engine.rpm;
 
-        if self.car != telemetry.car.index {
-            println!("Car change detected");
+        if self.car != telemetry.car.index || telemetry.stage.race_time == 0.0 {
+            println!("Car change or new stage detected, updating RPM maps");
             self.car = telemetry.car.index;
             let path = rbr.build_physics_path(self.car);
             if let Some(p) = path{
@@ -45,8 +45,7 @@ impl RPM {
         }
         if self.gear != telemetry.control.gear {                  
             self.gear = telemetry.control.gear;
-            self.upshift = self.gears.get_rpm_for_gear(self.gear);
-            println!("Switched to gear {}, upshift at {}", self.gear, self.upshift)
+            self.upshift = self.gears.get_rpm_for_gear(self.gear);            
         }
 
         if (self.current) != current_rpm {
