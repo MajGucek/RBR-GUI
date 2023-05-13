@@ -2,9 +2,10 @@ use std::io::Error;
 use hidapi::HidError;
 
 
-pub const LOGITECH_VID: u16 = 1133; // Vendor ID
-pub const G29_PID: u16 = 49743; // Product ID
-pub const G27_PID: u16 = 49819; // Product ID
+pub const LOGITECH_VID: u16 = 1133;
+pub const G29_PID: u16 = 49743; 
+pub const G27_PID: u16 = 49819; 
+pub const G920_PID: u16 = 49761;
 
 pub type RBR2G29Result = Result<(), RBR2G29Error>;
 
