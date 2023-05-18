@@ -8,8 +8,7 @@ use bincode::deserialize;
 
 #[derive(Default)]
 pub struct RPM {
-    current: f32,
-    idle: f32,
+    current: f32,   
     car: i32,
     gear: i32,
     max: f32,
@@ -28,8 +27,8 @@ impl RPM {
         }
     }
 
-    pub fn state(&self) -> (f32, f32, f32) {
-        (self.current, self.max, self.idle)
+    pub fn state(&self) -> (f32, f32) {
+        (self.current, self.max)
     }
 
     fn get_car_name_from_path(path: &PathBuf) -> Result<Option<PathBuf>, io::Error> {

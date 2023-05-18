@@ -11,10 +11,10 @@ fn read_telemetry_and_update(device: HidDevice) -> RBR2G29Result {
     let mut data = [0; 664];
     let mut rbr = rbr2g29::common::rbr::RBR::new();
 
-    loop {
+    println!("Looking for RBR process...");
+    loop {        
         match rbr.initialize() {
-            Err(error) => {
-                println!("{:?}", error);
+            Err(error) => {                
                 sleep(Duration::from_secs(1));
             }
             _ => break,

@@ -2,7 +2,7 @@ use crate::common::rpm::RPM;
 use core::u8::{MAX, MIN};
 use hidapi::HidDevice;
 
-use super::{util::RBR2G29Result, rbr::RBR};
+use super::{rbr::RBR, util::RBR2G29Result};
 
 pub struct LEDS {
     device: HidDevice,
@@ -38,8 +38,8 @@ impl LEDS {
     }
 
     fn new_led_state(&self) -> u8 {
-        let (rpm_current, rpm_max, rpm_idle) = self.rpm.state();
-        match rpm_max - (rpm_max - rpm_idle) / 2_f32 {
+        let (rpm_current, rpm_max) = self.rpm.state();
+        match rpm_max - rpm_max / 2_f32 {
             range_start if rpm_current < range_start || range_start == 0.0 => 0,
             range_start => {
                 let active_range = rpm_max - range_start;
@@ -59,20 +59,20 @@ impl LEDS {
 
     pub fn update(&mut self, data: &[u8], rbr: &RBR) -> RBR2G29Result {
         self.rpm.update(data, rbr);
-        
+
         let new_state = self.new_led_state();
         if new_state != self.state {
             self.update_device_and_state(new_state)?;
         }
-        let (rpm_current, rpm_max, _) = self.rpm.state();
-        if rpm_current >= rpm_max   {
-            self.flash_leds()?
+
+        if (self.state == 31 && (self.rpm.state().1 - self.rpm.state().0).abs() < 100.0) {
+            self.flash_leds()?;
         }
 
         Ok(())
     }
 
-    const FLASHING_THRESHOLD: u8 = 5;
+    const FLASHING_THRESHOLD: u8 = 60;
     fn increment_flash_timer(&mut self) {
         if self.flash_timer < Self::FLASHING_THRESHOLD {
             self.flash_timer += 1;
@@ -95,11 +95,12 @@ impl LEDS {
         if self.state == 31 && !self.flash_toggled && self.should_toggle_flash() {
             self.device.write(&Self::led_state_payload(0))?;
             self.flash_toggled = true;
+           
             self.reset_flash_timer()
         }
         if self.flash_toggled && self.should_toggle_flash() {
             self.device.write(&Self::led_state_payload(31))?;
-
+            
             self.flash_toggled = false;
             self.reset_flash_timer()
         }
