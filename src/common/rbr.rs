@@ -34,7 +34,7 @@ impl RBR {
         let s = System::new_all();
 
         for p in s.processes_by_exact_name(RBR_PROCESS_NAME) {
-            println!("{}:{}:{}", p.pid(), p.name(), p.root().to_string_lossy());
+            println!("PID: {} exe:{} dir:{}", p.pid(), p.name(), p.root().to_string_lossy());
             self.path = Some(p.root().to_path_buf());
             return Ok(());
         }
