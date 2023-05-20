@@ -4,6 +4,6 @@ pub mod common {
     pub mod util;
     pub mod telemetry;
     pub mod rbr;
-    pub mod carFolders;
-    pub mod gearMap;
+    pub mod car_folders;
+    pub mod gear_map;
 }

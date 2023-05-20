@@ -1,7 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 use std::{fs, io};
 
-use crate::common::gearMap::GearMap;
+use crate::common::gear_map::GearMap;
 use crate::common::rbr::RBR;
 use crate::common::telemetry::Telemetry;
 use bincode::deserialize;

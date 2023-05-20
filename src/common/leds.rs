@@ -65,7 +65,7 @@ impl LEDS {
             self.update_device_and_state(new_state)?;
         }
 
-        if (self.state == 31 && (self.rpm.state().1 - self.rpm.state().0).abs() < 100.0) {
+        if self.state == 31 && (self.rpm.state().1 - self.rpm.state().0).abs() < 100.0 {
             self.flash_leds()?;
         }
 

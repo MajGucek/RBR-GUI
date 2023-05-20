@@ -6,8 +6,8 @@ use std::{
 
 use sysinfo::{ProcessExt, System, SystemExt};
 
-use crate::common::carFolders::CarFolders;
-use crate::common::gearMap::GearMap;
+use crate::common::car_folders::CarFolders;
+use crate::common::gear_map::GearMap;
 
 use crate::common::util::{RBR2G29Error, RBR2G29Result};
 
