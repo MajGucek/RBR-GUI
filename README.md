@@ -1,6 +1,6 @@
 # RBR2G29
 
-This is a small tool that maps the Richard Burns Rally (NGP) RPM data to the Logitech G27 and G29 LED bars. It's heavily based on Andris0's [DR2G27](https://github.com/Andris0/DR2G27). Also thanks to [mika-n](https://github.com/mika-n) for some hints how to get the RPM limits per car.
+This is a small tool that maps the Richard Burns Rally (NGP) RPM data to the Logitech G27 and G29 LED bars. It's heavily based on Andris0's [DR2G27](https://github.com/Andris0/DR2G27). Also thanks to [mika-n](https://github.com/mika-n) for some hints on how to get the RPM limits per car directly from the game files.
 
 ## Requirements
 
