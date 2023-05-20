@@ -1,3 +1,4 @@
+use clap::{arg, command};
 use hidapi::{DeviceInfo, HidApi, HidDevice};
 use rbr2g29::common::leds::LEDS;
 use rbr2g29::common::util::{RBR2G29Result, G27_PID, G29_PID, G920_PID, LOGITECH_VID};
@@ -5,22 +6,23 @@ use std::net::UdpSocket;
 use std::thread::sleep;
 use std::time::Duration;
 
-fn read_telemetry_and_update(device: HidDevice) -> RBR2G29Result {
-    let socket = UdpSocket::bind("127.0.0.1:6776")?;
-    let mut leds = LEDS::new(device);
-    let mut data = [0; 664];
+
+fn read_telemetry_and_update(device: HidDevice, ip: &String, port: &String) -> RBR2G29Result {   
     let mut rbr = rbr2g29::common::rbr::RBR::new();
 
     println!("Looking for RBR process...");
-    loop {        
+    loop {
         match rbr.initialize() {
-            Err(error) => {                
+            Err(_) => {
                 sleep(Duration::from_secs(1));
             }
             _ => break,
-        }        
+        }
     }
-
+    let socket = UdpSocket::bind(format!("{ip}:{port}"))?;
+    let mut leds = LEDS::new(device);
+    let mut data = [0; 664];
+    println!("Listening on {}:{} for telemetry", ip, port);
     loop {
         match socket.recv(&mut data) {
             Ok(_) => leds.update(&data, &rbr)?,
@@ -53,7 +55,7 @@ fn device_connected(hid: &HidApi) -> Option<DeviceInfo> {
     None
 }
 
-fn connect_and_bridge() -> RBR2G29Result {
+fn connect_and_bridge(ip: &String, port: &String) -> RBR2G29Result {
     println!("Initializing");
     let mut hid = HidApi::new()?;
 
@@ -61,9 +63,9 @@ fn connect_and_bridge() -> RBR2G29Result {
         Some(device) => {
             let dev = device.open_device(&hid)?;
             println!("Connected");
-            read_telemetry_and_update(dev)?;
+            read_telemetry_and_update(dev, ip, port)?;
         }
-        None => println!("Could not find G27 or G29"),
+        None => println!("Could not find supported wheel"),
     }
     sleep(Duration::from_secs(1));
     hid.refresh_devices()?;
@@ -71,8 +73,17 @@ fn connect_and_bridge() -> RBR2G29Result {
 }
 
 fn main() {
+    let matches = command!()
+        .arg(arg!(-i --ip <IP> "IP adress of the telemetry service").default_value("127.0.0.1"))
+        .arg(arg!(-p --port <PORT> "Port of the telemetry service").default_value("6776"))
+        .get_matches();
+    
+
+    let ip = matches.get_one::<String>("ip").unwrap();
+    let port = matches.get_one::<String>("port").unwrap();
+
     loop {
-        if let Err(error) = connect_and_bridge() {
+        if let Err(error) = connect_and_bridge(&ip, &port) {
             println!("{:?}", error);
         }
 

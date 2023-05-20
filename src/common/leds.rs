@@ -92,6 +92,7 @@ impl LEDS {
     fn flash_leds(&mut self) -> RBR2G29Result {
         self.increment_flash_timer();
 
+
         if self.state == 31 && !self.flash_toggled && self.should_toggle_flash() {
             self.device.write(&Self::led_state_payload(0))?;
             self.flash_toggled = true;
