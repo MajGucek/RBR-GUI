@@ -1,25 +1,22 @@
 use std::net::UdpSocket;
-use rbrgui::common::telemetry::Telemetry;
+use bincode::deserialize;
+mod telemetry;
 
-fn update(data: &[u8]) {
-    let telemetry: Telemetry = deserialize(&data).unwrap();
+fn proccess_telemetry(data: &[u8]) {
+    let _telemetry: telemetry::Telemetry = deserialize(&data).unwrap();
 }
 
-fn read_telemetry_and_update() {   
-    
-    let socket = UdpSocket::bind("127.0.0.1:6779")?;
-    let mut data = [0; 664];
-    println!("Listening on 127.0.0.1:6779 for telemetry");
-    loop {
-        match socket.recv(&mut data) {
-            Ok(_) => update(&data)?,
-            Err(e) => println!("recv function failed: {e:?}"),
-        };
-    }
-}
 
 fn main() {
     loop {
-        read_telemetry_and_update();
+        let socket = UdpSocket::bind("127.0.0.1:6779").expect("failed to bind!");
+        let mut data = [0; 664];
+        println!("Listening on 127.0.0.1:6779 for telemetry");
+        loop {
+            match socket.recv(&mut data) {
+                Ok(_) => proccess_telemetry(&data),
+                Err(e) => println!("recv function failed: {e:?}"),
+            };
+        }
     }
 }
