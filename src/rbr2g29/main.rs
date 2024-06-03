@@ -19,10 +19,9 @@ fn read_telemetry_and_update(device: HidDevice, ip: &String, port: &String) -> R
             _ => break,
         }
     }
-    let socket = UdpSocket::bind(format!("{ip}:{port}"))?;
-    let mut leds = LEDS::new(device);
+    let socket = UdpSocket::bind("127.0.0.1:6779")?;
     let mut data = [0; 664];
-    println!("Listening on {}:{} for telemetry", ip, port);
+    println!("Listening on 127.0.0.1:6779 for telemetry");
     loop {
         match socket.recv(&mut data) {
             Ok(_) => leds.update(&data, &rbr)?,
@@ -31,62 +30,8 @@ fn read_telemetry_and_update(device: HidDevice, ip: &String, port: &String) -> R
     }
 }
 
-fn device_connected(hid: &HidApi) -> Option<DeviceInfo> {
-    println!("Looking for devices...");
-    for device in hid.device_list() {
-        if device.vendor_id() != LOGITECH_VID {
-            continue;
-        }
-
-        if device.product_id() == G27_PID {
-            println!("Found G27: {}", device.interface_number());
-            return Some(device.clone());
-        }
-
-        // G29 will appear multiple times as HID device, and only the one with interface number 0 seems to do anything with the RPM data send to it.
-        if (device.product_id() == G29_PID || device.product_id() == G920_PID)
-            && device.interface_number() == 0
-        {
-            println!("Found G29");
-            return Some(device.clone());
-        }
-    }
-
-    None
-}
-
-fn connect_and_bridge(ip: &String, port: &String) -> RBR2G29Result {
-    println!("Initializing");
-    let mut hid = HidApi::new()?;
-
-    match device_connected(&hid) {
-        Some(device) => {
-            let dev = device.open_device(&hid)?;
-            println!("Connected");
-            read_telemetry_and_update(dev, ip, port)?;
-        }
-        None => println!("Could not find supported wheel"),
-    }
-    sleep(Duration::from_secs(1));
-    hid.refresh_devices()?;
-    Ok(())
-}
-
 fn main() {
-    let matches = command!()
-        .arg(arg!(-i --ip <IP> "IP adress of the telemetry service").default_value("127.0.0.1"))
-        .arg(arg!(-p --port <PORT> "Port of the telemetry service").default_value("6776"))
-        .get_matches();
-    
-
-    let ip = matches.get_one::<String>("ip").unwrap();
-    let port = matches.get_one::<String>("port").unwrap();
-
     loop {
-        if let Err(error) = connect_and_bridge(&ip, &port) {
-            println!("{:?}", error);
-        }
-
-        sleep(Duration::from_secs(1));
+        read_telemetry_and_update();
     }
 }
