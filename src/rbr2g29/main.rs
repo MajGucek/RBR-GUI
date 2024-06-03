@@ -1,11 +1,10 @@
-use clap::{arg, command};
-use hidapi::{DeviceInfo, HidApi, HidDevice};
-use rbr2g29::common::leds::LEDS;
-use rbr2g29::common::util::{RBR2G29Result, G27_PID, G29_PID, G920_PID, LOGITECH_VID};
 use std::net::UdpSocket;
 use std::thread::sleep;
 use std::time::Duration;
 
+fn update(data: &[u8]) {
+    let telemetry: Telemetry = deserialize(&data).unwrap();
+}
 
 fn read_telemetry_and_update(device: HidDevice, ip: &String, port: &String) -> RBR2G29Result {   
     let mut rbr = rbr2g29::common::rbr::RBR::new();
@@ -24,7 +23,7 @@ fn read_telemetry_and_update(device: HidDevice, ip: &String, port: &String) -> R
     println!("Listening on 127.0.0.1:6779 for telemetry");
     loop {
         match socket.recv(&mut data) {
-            Ok(_) => leds.update(&data)?,
+            Ok(_) => update(&data)?,
             Err(e) => println!("recv function failed: {e:?}"),
         };
     }
