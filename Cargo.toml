@@ -1,32 +1,18 @@
 [package]
-name = "rbr2g29"
+name = "RBR-GUI"
 version = "0.1.0"
-edition = "2021"
-build = "src/rbr2g29/build.rs"
-
-exclude = [    
-    "tests/*"
-]
+build = "src/main.rs"
 
 [lib]
-name = "rbr2g29"
+name = "rbrgui"
 path = "src/lib.rs"
 
+
 [[bin]]
-name = "rbr2g29"
-path = "src/rbr2g29/main.rs"
+name = "RBR-GUI"
+path = "src/main.rs"
 
 [dependencies]
-hidapi = "2.2.2"
 serde = { version = "1.0.160", features = ["derive"] }
 bincode = "1.3.3"
-sysinfo = "0.29.0"
-clap = {version = "4.2.7", features = ["cargo"]}
-
-[target.'cfg(windows)'.dependencies]
-winapi = {version = "0.3.8", features = ["wincon", "winuser"]}
-
-[target.'cfg(target_os="windows")'.build-dependencies]
-winres = "0.1.11"
-
-
+sysinfo = "0.30.12"
