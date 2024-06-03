@@ -24,7 +24,7 @@ fn read_telemetry_and_update(device: HidDevice, ip: &String, port: &String) -> R
     println!("Listening on 127.0.0.1:6779 for telemetry");
     loop {
         match socket.recv(&mut data) {
-            Ok(_) => leds.update(&data, &rbr)?,
+            Ok(_) => leds.update(&data)?,
             Err(e) => println!("recv function failed: {e:?}"),
         };
     }
