@@ -21,7 +21,7 @@ impl RPM {
         }
     }
 
-    pub fn update(&mut self, data: &[u8], rbr: &RBR) {
+    pub fn update(&mut self, data: &[u8]) {
         let telemetry: Telemetry = deserialize(&data).unwrap();
     }
 }
