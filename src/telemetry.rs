@@ -6,118 +6,119 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Default)]
 pub struct Stage {
-    index: i32,
-    progress: f32,
-    race_time: f32,
-    drive_line_location: f32,
-    distance_to_end: f32,
+    pub index: i32,
+    pub progress: f32,
+    pub race_time: f32,
+    pub drive_line_location: f32,
+    pub distance_to_end: f32,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Engine {
-    rpm: f32,
-    radiator_coolant_temperature: f32,
-    engine_coolant_temperature: f32,
-    engine_temperature: f32,
+    pub rpm: f32,
+    pub radiator_coolant_temperature: f32,
+    pub engine_coolant_temperature: f32,
+    pub engine_temperature: f32,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Motion {
-    surge: f32,
-    sway: f32,
-    heave: f32,
-    roll: f32,
-    pitch: f32,
-    yaw: f32,
+    pub surge: f32,
+    pub sway: f32,
+    pub heave: f32,
+    pub roll: f32,
+    pub pitch: f32,
+    pub yaw: f32,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Car {
-    index: i32,
-    speed: f32,
-    position_x: f32,
-    position_y: f32,
-    position_z: f32,
-    roll: f32,
-    pitch: f32,
-    yaw: f32,
-    velocities: Motion,
-    accelerations: Motion,
-    engine: Engine,
+    pub index: i32,
+    pub speed: f32,
+    pub position_x: f32,
+    pub position_y: f32,
+    pub position_z: f32,
+    pub roll: f32,
+    pub pitch: f32,
+    pub yaw: f32,
+    pub velocities: Motion,
+    pub accelerations: Motion,
+    pub engine: Engine,
+    pub suspension: Suspension
 }
 
 #[derive(Deserialize, Default)]
 pub struct Control {
-    steering: f32,
-    throttle: f32,
-    brake: f32,
-    handbrake: f32,
-    clutch: f32,
-    gear: i32,
-    footbrake_pressure: f32,
-    handbrake_pressure: f32,
+    pub steering: f32,
+    pub throttle: f32,
+    pub brake: f32,
+    pub handbrake: f32,
+    pub clutch: f32,
+    pub gear: i32,
+    pub footbrake_pressure: f32,
+    pub handbrake_pressure: f32,
 }
 
 #[derive(Deserialize, Default)]
 pub struct TireSegment {
-    temperature: f32,
-    wear: f32,
+    pub temperature: f32,
+    pub wear: f32,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Tire {
-    pressure: f32,
-    temperature: f32,
-    carcass_temperature: f32,
-    tread_temperature: f32,
-    current_segment: u32,
-    segment1: TireSegment,
-    segment2: TireSegment,
-    segment3: TireSegment,
-    segment4: TireSegment,
-    segment5: TireSegment,
-    segment6: TireSegment,
-    segment7: TireSegment,
-    segment8: TireSegment,
+    pub pressure: f32,
+    pub temperature: f32,
+    pub carcass_temperature: f32,
+    pub tread_temperature: f32,
+    pub current_segment: u32,
+    pub segment1: TireSegment,
+    pub segment2: TireSegment,
+    pub segment3: TireSegment,
+    pub segment4: TireSegment,
+    pub segment5: TireSegment,
+    pub segment6: TireSegment,
+    pub segment7: TireSegment,
+    pub segment8: TireSegment,
 }
 
 #[derive(Deserialize, Default)]
 pub struct BrakeDisk {
-    layer_temperature: f32,
-    temperature: f32,
-    wear: f32,
+    pub layer_temperature: f32,
+    pub temperature: f32,
+    pub wear: f32,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Wheel {
-    brake_disk: BrakeDisk,
-    tire: Tire,
+    pub brake_disk: BrakeDisk,
+    pub tire: Tire,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Damper {
-    damage: f32,
-    piston_velocity: f32,
+    pub damage: f32,
+    pub piston_velocity: f32,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Suspension {
-    spring_deflection: f32,
-    rollbar_force: f32,
-    spring_force: f32,
-    damper_force: f32,
-    strut_force: f32,
-    helper_spring_is_active: i32,
-    damper: Damper,
-    wheel: Wheel,
+    pub spring_deflection: f32,
+    pub rollbar_force: f32,
+    pub spring_force: f32,
+    pub damper_force: f32,
+    pub strut_force: f32,
+    pub helper_spring_is_active: i32,
+    pub damper: Damper,
+    pub wheel: Wheel,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Telemetry {
-    total_steps: u32,
-    stage: Stage,
-    control: Control,
-    car: Car,
+    pub total_steps: u32,
+    pub stage: Stage,
+    pub control: Control,
+    pub car: Car,
 }
 
 

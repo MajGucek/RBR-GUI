@@ -3,12 +3,14 @@ use std::io::Error;
 use bincode::deserialize;
 // telemetry.rs
 mod telemetry;
-use telemetry::Telemetry;
+use telemetry::{Suspension, Telemetry};
+
+extern crate colortemp;
 
 // UI
 use bevy::{prelude::*};
 use bevy_egui::{EguiContexts, EguiPlugin};
-use egui::{Color32, Frame, Mesh, Pos2, Rect, Rounding, TextureId, Vec2, Widget};
+use egui::{Color32, Frame, Mesh, Pos2, Rect, Rounding, Sense, Stroke, TextureId, Ui, Vec2, Widget, WidgetRect};
 //use bevy::time::common_conditions::on_timer;
 //use bevy::utils::Duration;
 
@@ -106,10 +108,17 @@ fn main() {
         .run();
 }
 
+const HORIZONTAL_CENTER: f32 = 70.0;
+const VERTICAL_CENTER: f32 = 50.0;
+const SPACING: f32 = 50.0;
+
+const SIZE: Vec2 = Vec2::splat(100.0);
+
 fn tyre_menu(
     mut windows: Query<&mut Window>,
     mut egui_ctx: EguiContexts,
     mut next_state: ResMut<NextState<DisplayState>>,
+    rbr: Res<RBR>
 ) {
     let mut window = windows.single_mut();
     window.resolution.set(WIDTH, HEIGHT);
@@ -124,25 +133,74 @@ fn tyre_menu(
         .frame(Frame {
             ..default()
         });
-    const SIZE: Vec2 = Vec2::new(100.0, 100.0);
     gui.show(egui_ctx.ctx_mut(), |ui| {
         ui.vertical_centered(|ui| {
+            ui.label("Tyres");
             let back = ui.button("Back");
             if back.clicked() {
                 next_state.set(DisplayState::Main);
             }
         });
-        ui.horizontal(|ui| {
-                ui.vertical(|ui| {
-                    ui.label("LF");
-                    ui.label("RF");
+        ui.vertical_centered(|ui| {
+            ui.with_layout(
+                egui::Layout::top_down_justified(egui::Align::Center),
+                 |ui| {
+                ui.add_space(VERTICAL_CENTER);
+                ui.vertical_centered(|ui| {
+                    ui.horizontal(|ui| {
+                        ui.add_space(HORIZONTAL_CENTER);
+                        ui.vertical(|ui| {
+                            //ui.label("LF");
+                            create_tyre(ui, rbr.telemetry.);
+                            ui.add_space(SPACING);
+                        });
+                        ui.add_space(SPACING);
+                        ui.vertical(|ui| {
+                            //ui.label("RF");
+                            create_tyre(ui);
+                        });
+                    })
+                    
                 });
-                ui.vertical(|ui| {
-                    ui.label("LR");
-                    ui.label("RR");
+                ui.vertical_centered(|ui| {
+                    ui.horizontal(|ui| {
+                        ui.add_space(HORIZONTAL_CENTER);
+                        ui.vertical(|ui| {
+                            //ui.label("LR");
+                            create_tyre(ui);
+                            ui.add_space(SPACING);
+                        });
+                        ui.add_space(SPACING);
+                        ui.vertical(|ui| {
+                            //ui.label("RR");
+                            create_tyre(ui);
+                        });
+                    });
+                    
                 });
+            });
         });  
     });
+}
+
+fn create_tyre(
+    ui: &mut Ui,
+    temperature: f32,
+) {
+    let (response, painter) = ui.allocate_painter(SIZE, Sense::hover());
+    let c = response.rect.center();
+    painter.rect_filled(
+        Rect::from_center_size(
+            c,
+            SIZE
+        ), 
+        Rounding::same(0.0),
+        Color32::GREEN 
+    );
+}
+
+fn get_color(temperature: f32) -> Color32 {
+
 }
 
 
