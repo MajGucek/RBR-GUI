@@ -1,76 +1,130 @@
 use std::net::UdpSocket;
+use std::io::Error;
 use bincode::deserialize;
 mod telemetry;
 use telemetry::Telemetry;
 
 // UI
-use bevy::prelude::*;
+use bevy::{prelude::*, ui::ContentSize};
 use bevy_egui::{EguiContexts, EguiPlugin};
-use bevy::time::common_conditions::on_timer;
-use bevy::utils::Duration;
+//use bevy::time::common_conditions::on_timer;
+//use bevy::utils::Duration;
+
+const PORT: &str = "127.0.0.1:6779";
 
 
 #[derive(Resource)]
-struct Connection {
-    is_connected: bool,
+struct RBR {
+    telemetry: Telemetry,
 }
+impl RBR {
+    fn get_data(&mut self, data: &[u8]) {
+        self.telemetry = deserialize(&data).unwrap();
+    }
+}
+impl Default for RBR {
+    fn default() -> Self {
+        RBR {
+            telemetry: Telemetry::default(),
+        }
+    }
+}
+
 
 #[derive(Resource)]
 struct Data {
     buf: [u8; 664],
-    telemetry: Telemetry,
 }
 
-#[derive(Event)]
-struct UdpConnectedEvent(UdpSocket);
+impl Default for Data {
+    fn default() -> Self {
+        Data {
+            buf: [0; 664],
+        }
+    }
+}
+
+#[derive(Resource)]
+struct Socket {
+    socket: Result<UdpSocket, Error>,
+    paired: bool,
+}
+
+impl Default for Socket {
+    fn default() -> Self {
+        Socket {
+            socket: UdpSocket::bind(PORT),
+            paired: false,
+        }
+    }
+}
+
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
-        .add_event::<UdpConnectedEvent>()
+        .init_resource::<Socket>()
+        .init_resource::<Data>()
+        .init_resource::<RBR>()
+        /*
+        .add_systems(Startup, connect_udp)
         .add_systems(
             Update,
             (
-                udp_connected.run_if(on_timer(Duration::from_secs(1))),
-                handle_telemetry,
-            )
+                telemetry_handler,
+                ui_handler
+                    )
         )
+        */
+        .add_systems(Update, ui_handler)
         .run();
 }
 
-fn udp_connected(
-    mut connection: ResMut<Connection>,
-    mut ev_udp_connected: EventWriter<UdpConnectedEvent>,
+
+fn ui_handler(
+    mut contexts: EguiContexts,
+
+    rbr: Res<RBR>
 ) {
-    if !udp.paired {
-        let socket = UdpSocket::bind("127.0.0.1:6779");
-        match socket {
-            Ok(_) => {
-                ev_udp_connected.send(UdpConnectedEvent(socket.unwrap()));
-            },
-            Err(_) => {
-                println!("Failed to Bind to Port 6779!");
-            },
-        }
+    
+    egui::Window::new("Hello").show(contexts.ctx_mut(), |ui| {
+
+    });
+    
+}
+
+
+fn connect_udp(
+    mut socket: ResMut<Socket>
+) {
+    match socket.socket {
+        Ok(_) => {
+            socket.paired = true;
+        },
+        Err(_) => {
+            socket.paired = false;
+        },
     }
 }
 
-fn handle_telemetry(
-    socket: Res<Connection>,
-    mut data: ResMut<Data>
+fn telemetry_handler(
+    mut data: ResMut<Data>,
+    mut rbr: ResMut<RBR>,
+    socket: Res<Socket>
 ) {
     if socket.paired {
-        match socket.socket.recv(&mut data.buf) {
-            Ok(_) => { proccess_telemetry(&mut data)},
+        match socket.socket.as_ref().expect("Error").recv(&mut data.buf) {
+            Ok(_) => { 
+                rbr.get_data(&data.buf);
+            },
             Err(e) =>  { println!("recv function failed: {e:?}") },
         }
+    } else {
+        println!("Didn't connect to Port 6779!");
     }
 }
 
 
-fn proccess_telemetry(
-    data: &mut Data
-) {
-    data.telemetry = deserialize(&data.buf).unwrap();
-}
+
+

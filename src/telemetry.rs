@@ -4,7 +4,7 @@ use serde::Deserialize;
 // Telemetry data is ported from the NGP rbr.telemetry.data.TelemetryData.h header
 // that is part of the NGP plugin.
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Stage {
     index: i32,
     progress: f32,
@@ -13,7 +13,7 @@ pub struct Stage {
     distance_to_end: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Engine {
     rpm: f32,
     radiator_coolant_temperature: f32,
@@ -21,7 +21,7 @@ pub struct Engine {
     engine_temperature: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Motion {
     surge: f32,
     sway: f32,
@@ -31,7 +31,7 @@ pub struct Motion {
     yaw: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Car {
     index: i32,
     speed: f32,
@@ -46,7 +46,7 @@ pub struct Car {
     engine: Engine,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Control {
     steering: f32,
     throttle: f32,
@@ -58,13 +58,13 @@ pub struct Control {
     handbrake_pressure: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct TireSegment {
     temperature: f32,
     wear: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Tire {
     pressure: f32,
     temperature: f32,
@@ -81,26 +81,26 @@ pub struct Tire {
     segment8: TireSegment,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct BrakeDisk {
     layer_temperature: f32,
     temperature: f32,
     wear: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Wheel {
     brake_disk: BrakeDisk,
     tire: Tire,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Damper {
     damage: f32,
     piston_velocity: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Suspension {
     spring_deflection: f32,
     rollbar_force: f32,
@@ -112,7 +112,7 @@ pub struct Suspension {
     wheel: Wheel,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct Telemetry {
     total_steps: u32,
     stage: Stage,
