@@ -44,7 +44,10 @@ pub struct Car {
     pub velocities: Motion,
     pub accelerations: Motion,
     pub engine: Engine,
-    pub suspension: Suspension
+    pub suspension_lf: Suspension,
+    pub suspension_rf: Suspension,
+    pub suspension_lb: Suspension,
+    pub suspension_rb: Suspension,
 }
 
 #[derive(Deserialize, Default)]
