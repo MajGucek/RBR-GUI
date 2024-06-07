@@ -1,5 +1,5 @@
 // Hide Terminal
-//#![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 
 // Remove and fix before release
 #![allow(dead_code, 
@@ -43,6 +43,7 @@ const MIN_TEMP: f32 = 40.0 + 273.15;
 #[derive(Resource)]
 struct RBR {
     telemetry: Telemetry,
+    recv: bool,
 }
 impl RBR {
     fn get_data(&mut self, data: &[u8]) {
@@ -53,23 +54,12 @@ impl Default for RBR {
     fn default() -> Self {
         RBR {
             telemetry: Telemetry::default(),
+            recv: false,
         }
     }
 }
 
 
-#[derive(Resource)]
-struct Data {
-    buf: [u8; 664],
-}
-
-impl Default for Data {
-    fn default() -> Self {
-        Data {
-            buf: [0; 664],
-        }
-    }
-}
 
 #[derive(Resource)]
 struct Socket {
@@ -1354,7 +1344,7 @@ impl Default for Pedals {
 31.5,
 30.5,
 31.0,
-                100.0,
+100.0,
 99.5,
 99.0,
 98.5,
@@ -1780,18 +1770,15 @@ fn main() {
         .insert_state(DisplayState::Main)
         .insert_state(ConnectionState::Disconnected)
         .init_resource::<Socket>()
-        .init_resource::<Data>()
         .init_resource::<RBR>()
         .init_resource::<Port>()
         .init_resource::<Pedals>()
         .add_systems(
             Update,
             (   
-                /*
+                
                 telemetry_handler
-                    .run_if(in_state(ConnectionState::Connected))
-                    .run_if(not(in_state(DisplayState::Main))),
-                    */
+                    .run_if(in_state(ConnectionState::Connected)),
                 connect_udp
                     .run_if(in_state(ConnectionState::Disconnected))
                     .run_if(on_timer(Duration::from_secs(2)))
@@ -1944,6 +1931,7 @@ fn tyre_menu(
                     ui.horizontal(|ui| {
                         ui.add_space(HORIZONTAL_CENTER);
                         ui.vertical(|ui| {
+                            /*
                             let lf = rbr
                                 .telemetry
                                 .car
@@ -1951,11 +1939,13 @@ fn tyre_menu(
                                 .wheel
                                 .tire
                                 .temperature;
+                            */
                             create_tyre(ui, 370.0);
                             ui.add_space(SPACING);
                         });
                         ui.add_space(SPACING);
                         ui.vertical(|ui| {
+                            /*
                             let rf = rbr
                                 .telemetry
                                 .car
@@ -1963,6 +1953,7 @@ fn tyre_menu(
                                 .wheel
                                 .tire
                                 .temperature;
+                            */
                             create_tyre(ui, 300.0);
                         });
                     })
@@ -1972,6 +1963,7 @@ fn tyre_menu(
                     ui.horizontal(|ui| {
                         ui.add_space(HORIZONTAL_CENTER);
                         ui.vertical(|ui| {
+                            /*
                             let lb = rbr
                                 .telemetry
                                 .car
@@ -1979,11 +1971,13 @@ fn tyre_menu(
                                 .wheel
                                 .tire
                                 .temperature;
+                            */
                             create_tyre(ui, 340.0);
                             ui.add_space(SPACING);
                         });
                         ui.add_space(SPACING);
                         ui.vertical(|ui| {
+                            /*
                             let rb = rbr
                                 .telemetry
                                 .car
@@ -1991,6 +1985,7 @@ fn tyre_menu(
                                 .wheel
                                 .tire
                                 .temperature;
+                            */
                             create_tyre(ui, 400.0);
                         });
                     });
@@ -2022,7 +2017,8 @@ fn main_menu(
     mut connection_state: ResMut<NextState<ConnectionState>>,
     connection_state_current: Res<State<ConnectionState>>,
     mut port: ResMut<Port>,
-    socket: Res<Socket>
+    socket: Res<Socket>,
+    rbr: Res<RBR>
 ) {
     let mut window = windows.single_mut();
     window.resolution.set(WIDTH, HEIGHT);
@@ -2034,7 +2030,6 @@ fn main_menu(
         .collapsible(false)
         .resizable(false)
         .min_height(HEIGHT);
-    
     gui.show(egui_ctx.ctx_mut(), |ui| {
         ui.style_mut()
             .override_font_id = Some(FontId::new(
@@ -2057,7 +2052,7 @@ fn main_menu(
             match connection_state_current.get() {
                 ConnectionState::Connected => {
                     ui.label(
-                        format!("Connected to: {p}!")
+                        format!("{p}")
                     );
                 },
                 ConnectionState::Disconnected => {
@@ -2066,6 +2061,19 @@ fn main_menu(
                     );
                 }
             }
+            let color = if rbr.recv {
+                Color32::GREEN
+            } else {
+                Color32::RED
+            };
+            ui.colored_label(color, "Connection State");
+            let time = if rbr.recv {
+                rbr.telemetry.stage.race_time
+            } else {
+                -1.0
+            };
+            ui.label(format!("Race time: {time}"));
+
             let response = ui.add(
                 egui::TextEdit::singleline(&mut port.port)
                 .hint_text("UDP port")
@@ -2106,20 +2114,31 @@ fn connect_udp(
 }
 
 fn telemetry_handler(
-    mut data: ResMut<Data>,
     mut rbr: ResMut<RBR>,
     socket: Res<Socket>,
     mut next_state: ResMut<NextState<ConnectionState>>,
     mut pedals: ResMut<Pedals>
 ) {
-    match socket.socket.as_ref().expect("LMAO!").recv(&mut data.buf) {
-        Ok(_) => { 
-            rbr.get_data(&data.buf);
-            pedals.add_data(&rbr.telemetry.control);
-            next_state.set(ConnectionState::Connected);
+    let mut buf = [0; 664];
+    match socket.socket.as_ref().ok() {
+        Some(udp_socket) => {
+            udp_socket.set_nonblocking(true)
+                .expect("Failed to enter non-blocking mode");
+            match udp_socket.recv(&mut buf).ok() {
+                Some(_) => {
+                    rbr.recv = true;
+                    rbr.get_data(&buf);
+                    pedals.add_data(&rbr.telemetry.control);
+                },
+                None => {
+                    rbr.recv = false;
+                    //println!("Failed recv()");
+                }
+            }
+            
+            
         },
-        Err(_) =>  { 
-            println!("Couldn't read from UDP port! Retrying...");
+        None => {
             next_state.set(ConnectionState::Disconnected);
         },
     }
