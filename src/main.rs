@@ -1,5 +1,5 @@
 // Hide Terminal
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 // Remove and fix before release
 #![allow(dead_code, 
@@ -37,6 +37,7 @@ const TIRE_SIZE: Vec2 = Vec2::splat(100.0);
 const GRAPH_SIZE: Vec2 = Vec2::new(WIDTH * 2.0, 200.0);
 const DOT_SIZE: Vec2 = Vec2::splat(1.0);
 const DOT_SPACING: u32 = 1;
+const CHECKBOX_SPACING: f32 = 10.0;
 const MAX_TEMP: f32 = 150.0 + 273.15;
 const MIN_TEMP: f32 = 40.0 + 273.15;
 
@@ -1754,6 +1755,26 @@ impl Default for Pedals {
 }
 
 
+#[derive(Resource)]
+struct PedalCheckboxes {
+    throttle: bool,
+    brake: bool, 
+    handbrake: bool,
+    clutch: bool,
+    gear: bool,
+}
+impl Default for PedalCheckboxes {
+    fn default() -> Self {
+        PedalCheckboxes {
+            throttle: true,
+            brake: true,
+            handbrake: false,
+            clutch: false,
+            gear: false,
+        }
+    }
+}
+
 
 fn main() {
     let window = Window {
@@ -1773,6 +1794,7 @@ fn main() {
         .init_resource::<RBR>()
         .init_resource::<Port>()
         .init_resource::<Pedals>()
+        .init_resource::<PedalCheckboxes>()
         .add_systems(
             Update,
             (   
@@ -1801,7 +1823,8 @@ fn pedal_menu(
     mut egui_ctx: EguiContexts,
     mut next_state: ResMut<NextState<DisplayState>>,
     rbr: Res<RBR>,
-    pedals: Res<Pedals>
+    pedals: Res<Pedals>,
+    mut checkboxes: ResMut<PedalCheckboxes>
 ) {
     let mut window = windows.single_mut();
     window.resolution.set(WIDTH * 1.5, HEIGHT / 2.0);
@@ -1828,33 +1851,87 @@ fn pedal_menu(
                  egui::FontFamily::Monospace
         ));
         ui.horizontal(|ui| {
-            ui.add_space(HORIZONTAL_CENTER * 3.0);
+            //
             ui.vertical_centered(|ui| {
-                ui.label("Pedals");
-                let back = ui.button("back");
-                ui.colored_label(Color32::GREEN, "Throttle");
-                ui.colored_label(Color32::RED, "Brake");
-                
-                if back.clicked() {
-                    next_state.set(DisplayState::Main);
-                }
+                ui.horizontal(|ui| {
+                    ui.add_space(HORIZONTAL_CENTER * 4.0);
+                    ui.label("Pedals");
+                });
+                ui.horizontal(|ui| {
+                    ui.add_space(HORIZONTAL_CENTER * 4.0 + 10.0);
+                    let back = ui.button("back");
+                    if back.clicked() {
+                        next_state.set(DisplayState::Main);
+                    }
+                });
+                ui.horizontal(|ui| {
+                    ui.add_space(25.0);
+                    ui.vertical(|ui| {
+                        ui.colored_label(Color32::GREEN, "Throttle");
+                        ui.add(egui::Checkbox::without_text(&mut checkboxes.throttle));
+                    });
+                    ui.vertical(|ui| {
+                        ui.colored_label(Color32::RED, "Brake");
+                        ui.add(egui::Checkbox::without_text(&mut checkboxes.brake));
+                    });
+                    ui.vertical(|ui| {
+                        ui.colored_label(Color32::BLUE, "Handbrake");
+                        ui.add(egui::Checkbox::without_text(&mut checkboxes.handbrake));
+                    });
+                    ui.vertical(|ui| {
+                        ui.colored_label(Color32::LIGHT_BLUE, "Clutch");
+                        ui.add(egui::Checkbox::without_text(&mut checkboxes.clutch));
+                    });
+                    ui.vertical(|ui| {
+                        ui.colored_label(Color32::YELLOW, "Gear");
+                        ui.add(egui::Checkbox::without_text(&mut checkboxes.gear));
+                    });
+                });
             });
         });
         
         ui.vertical(|ui| {
             for i in 0..pedals.size {
-                create_dot(
+                if checkboxes.throttle {
+                    create_dot(
                         ui, 
-                    ((i * DOT_SPACING) as f32),
-                    (GRAPH_SIZE.y - (pedals.throttle[i as usize] + 5.0)),
-                    Color32::GREEN
-                );
-                create_dot(
-                    ui, 
-                    ((i * DOT_SPACING) as f32), 
-                    (GRAPH_SIZE.y - (pedals.brake[i as usize] + 5.0)),
-                    Color32::RED
-                );
+                        ((i * DOT_SPACING) as f32),
+                        (GRAPH_SIZE.y - (pedals.throttle[i as usize] + 5.0)),
+                        Color32::GREEN
+                    );
+                }
+                if checkboxes.brake {
+                    create_dot(
+                        ui, 
+                        ((i * DOT_SPACING) as f32), 
+                        (GRAPH_SIZE.y - (pedals.brake[i as usize] + 5.0)),
+                        Color32::RED
+                    );
+                }
+                if checkboxes.handbrake {
+                    create_dot(
+                        ui, 
+                        ((i * DOT_SPACING) as f32), 
+                        (GRAPH_SIZE.y - (pedals.handbrake[i as usize] + 5.0)),
+                        Color32::BLUE
+                    );
+                }
+                if checkboxes.clutch {
+                    create_dot(
+                        ui, 
+                        ((i * DOT_SPACING) as f32), 
+                        (GRAPH_SIZE.y - (pedals.clutch[i as usize] + 5.0)),
+                        Color32::LIGHT_BLUE
+                    );
+                }
+                if checkboxes.gear {
+                    create_dot(
+                        ui, 
+                        ((i * DOT_SPACING) as f32), 
+                        (GRAPH_SIZE.y - ((pedals.handbrake[i as usize] + 5.0) * 10.0)),
+                        Color32::YELLOW
+                    );
+                }
             }
         });
     });
