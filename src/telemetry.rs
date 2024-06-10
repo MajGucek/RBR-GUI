@@ -124,4 +124,18 @@ pub struct Telemetry {
     pub car: Car,
 }
 
-
+impl Telemetry {
+    pub fn format(&mut self) {
+        self.control.brake *= 100.0;
+        self.control.throttle *= 100.0;
+        self.control.clutch *= 100.0;
+        self.control.gear -= 1;
+    }
+    pub fn get_time(&self) -> (f32, f32, f32) {
+        let race_time: &f32 = &self.stage.race_time;
+        let hr = (race_time / 60.0).round();
+        let min = (((race_time / 60.0) - hr) * 60.0).round();
+        let sec = ((race_time / 3600.0) - min) * 60.0;
+        (sec, min, hr)
+    }
+}
