@@ -256,9 +256,7 @@ fn delta_menu(
                 if back.clicked() {
                     next_state.set(DisplayState::Main);
                 }
-                //let (sec, min, hr) = rbr.telemetry.get_time();
-                let min = 2;
-                let sec = 54.343;
+                let (sec, min, hr) = rbr.telemetry.get_time();
                 ui.label(format!("{min} : {sec}"));
                 ui.add_space(SPACING * 0.1);
                 let (response, painter) = ui.allocate_painter(DELTA_SIZE, Sense::hover());
@@ -271,7 +269,7 @@ fn delta_menu(
                     Rounding::same(0.0),
                     Color32::GRAY
                 );
-                let offset = -1.2;
+                let offset = -1.0;
                 let delta_color = if offset > 0.0 {
                     Color32::GREEN
                 } else {
