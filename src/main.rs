@@ -54,7 +54,7 @@ struct RBR {
 impl RBR {
     fn get_data(&mut self, data: &[u8]) {
         self.telemetry = deserialize(&data).unwrap();
-        //self.telemetry.format();
+        self.telemetry.format();
     }
 }
 impl Default for RBR {
@@ -215,7 +215,7 @@ fn main() {
                 main_menu.run_if(in_state(DisplayState::Main)),
                 pedal_menu.run_if(in_state(DisplayState::Pedals)),
                 tire_menu.run_if(in_state(DisplayState::Tyres)),
-                //delta_menu.run_if(in_state(DisplayState::Delta)),
+                delta_menu.run_if(in_state(DisplayState::Delta)),
         )
     )
     .run();
@@ -594,7 +594,7 @@ fn main_menu(
             ui.add_space(SPACING);
             let pedals = ui.button("Pedal Telemetry");
             let tires = ui.button("Tyre Telemetry");
-            //let delta = ui.button("Delta Time");
+            let delta = ui.button("Delta Time");
             
             ui.add_space(SPACING);
             let p = &socket.address;
@@ -608,7 +608,7 @@ fn main_menu(
                     );
                 }
             }
-            /*
+            
             if rbr.recv {
                 ui.colored_label(Color32::GREEN, "Connected!");
             } else {
@@ -620,7 +620,7 @@ fn main_menu(
                 println!("{hr}: {min}: {sec}");
                 ui.label(format!("Race time: {}", sec));
             }
-            */
+            
             
 
             let response = ui.add(
@@ -639,11 +639,11 @@ fn main_menu(
             if tires.clicked() {
                 next_state.set(DisplayState::Tyres);
             }
-            /*
+            
             if delta.clicked() {
                 next_state.set(DisplayState::Delta);
             }
-            */
+            
         });
             
     });
