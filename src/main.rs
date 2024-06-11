@@ -96,7 +96,7 @@ struct Port {
 impl Default for Port {
     fn default() -> Self {
         Port {
-            port: String::with_capacity(15),
+            port: String::new(),
         }
     }
 }

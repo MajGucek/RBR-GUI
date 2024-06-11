@@ -8,7 +8,7 @@ use serde::Deserialize;
 pub struct Stage {
     pub index: i32,
     pub progress: f32,
-    pub race_time: f32,
+    pub race_time: f32, // seconds
     pub drive_line_location: f32,
     pub distance_to_end: f32,
 }
@@ -133,9 +133,9 @@ impl Telemetry {
     }
     pub fn get_time(&self) -> (f32, f32, f32) {
         let race_time: &f32 = &self.stage.race_time;
-        let hr = (race_time / 60.0).round();
-        let min = (((race_time / 60.0) - hr) * 60.0).round();
-        let sec = ((race_time / 3600.0) - min) * 60.0;
+        let hr: f32 = (race_time / 3600.0).round();
+        let min: f32 = (race_time / 60.0).round();
+        let sec: f32 = f32::trunc(race_time * 1000.0) / 1000.0;
         (sec, min, hr)
     }
 }
