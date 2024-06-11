@@ -54,7 +54,7 @@ struct RBR {
 impl RBR {
     fn get_data(&mut self, data: &[u8]) {
         self.telemetry = deserialize(&data).unwrap();
-        self.telemetry.format();
+        //self.telemetry.format();
     }
 }
 impl Default for RBR {
@@ -214,8 +214,8 @@ fn main() {
             (
                 main_menu.run_if(in_state(DisplayState::Main)),
                 pedal_menu.run_if(in_state(DisplayState::Pedals)),
-                tyre_menu.run_if(in_state(DisplayState::Tyres)),
-                delta_menu.run_if(in_state(DisplayState::Delta)),
+                tire_menu.run_if(in_state(DisplayState::Tyres)),
+                //delta_menu.run_if(in_state(DisplayState::Delta)),
         )
     )
     .run();
@@ -443,7 +443,7 @@ fn create_dot(
         });
 }
 
-fn create_tyre(
+fn create_tire(
     ui: &mut Ui,
     temperature: f32,
 ) {
@@ -475,7 +475,7 @@ fn create_brake(
     );
 }
 
-fn tyre_menu(
+fn tire_menu(
     mut egui_ctx: EguiContexts,
     mut next_state: ResMut<NextState<DisplayState>>,
     rbr: Res<RBR>
@@ -504,30 +504,38 @@ fn tyre_menu(
                 ui.vertical(|ui| {
                     ui.horizontal(|ui| {
                         ui.add_space(TIRE_HORIZONTAL_SPACING);
+                        let lf_brake = rbr.telemetry.car.suspension_lf.wheel.brake_disk.temperature;
+                        let lf_tire = rbr.telemetry.car.suspension_lf.wheel.tire.temperature;
+                        let rf_brake = rbr.telemetry.car.suspension_rf.wheel.brake_disk.temperature;
+                        let rf_tire = rbr.telemetry.car.suspension_rf.wheel.tire.temperature;
                         ui.vertical(|ui| {
                             ui.add_space(BRAKE_VERTICAL_SPACING);
-                            create_brake(ui, 370.0);
+                            create_brake(ui, lf_brake);
                         });
                         ui.add_space(BRAKE_SPACING);
-                        create_tyre(ui, 370.0);
+                        create_tire(ui, lf_tire);
                         ui.add_space(SPACING);
-                        create_tyre(ui, 300.0);
+                        create_tire(ui, rf_tire);
                         ui.add_space(BRAKE_SPACING);
-                        create_brake(ui, 300.0);
+                        create_brake(ui, rf_brake);
                     });
                     ui.add_space(SPACING);
                     ui.horizontal(|ui| {
                         ui.add_space(TIRE_HORIZONTAL_SPACING);
+                        let lb_brake = rbr.telemetry.car.suspension_lb.wheel.brake_disk.temperature;
+                        let lb_tire = rbr.telemetry.car.suspension_lb.wheel.tire.temperature;
+                        let rb_brake = rbr.telemetry.car.suspension_rb.wheel.brake_disk.temperature;
+                        let rb_tire = rbr.telemetry.car.suspension_rb.wheel.tire.temperature;
                         ui.vertical(|ui| {
                             ui.add_space(BRAKE_VERTICAL_SPACING);
-                            create_brake(ui, 370.0);
+                            create_brake(ui, lb_brake);
                         });
                         ui.add_space(BRAKE_SPACING);
-                        create_tyre(ui, 370.0);
+                        create_tire(ui, lb_tire);
                         ui.add_space(SPACING);
-                        create_tyre(ui, 300.0);
+                        create_tire(ui, rb_tire);
                         ui.add_space(BRAKE_SPACING);
-                        create_brake(ui, 300.0);
+                        create_brake(ui, rb_brake);
                     });
                 });
                 ui.add_space(VERTICAL_CENTER * 5.0);
@@ -585,15 +593,14 @@ fn main_menu(
             ui.hyperlink_to("Maj Guček", "https://github.com/MajGucek/RBR-GUI");
             ui.add_space(SPACING);
             let pedals = ui.button("Pedal Telemetry");
-            let tyres = ui.button("Tyre Telemetry");
-            let delta = ui.button("Delta Time");
+            let tires = ui.button("Tyre Telemetry");
+            //let delta = ui.button("Delta Time");
+            
             ui.add_space(SPACING);
             let p = &socket.address;
             match connection_state_current.get() {
                 ConnectionState::Connected => {
-                    ui.label(
-                        format!("{p}")
-                    );
+                    ui.colored_label(Color32::GREEN, format!("{p}"));
                 },
                 ConnectionState::Disconnected => {
                     ui.label(
@@ -601,6 +608,7 @@ fn main_menu(
                     );
                 }
             }
+            /*
             if rbr.recv {
                 ui.colored_label(Color32::GREEN, "Connected!");
             } else {
@@ -612,6 +620,7 @@ fn main_menu(
                 println!("{hr}: {min}: {sec}");
                 ui.label(format!("Race time: {}", sec));
             }
+            */
             
 
             let response = ui.add(
@@ -627,12 +636,14 @@ fn main_menu(
             if pedals.clicked() {
                 next_state.set(DisplayState::Pedals);
             }
-            if tyres.clicked() {
+            if tires.clicked() {
                 next_state.set(DisplayState::Tyres);
             }
+            /*
             if delta.clicked() {
                 next_state.set(DisplayState::Delta);
             }
+            */
         });
             
     });
