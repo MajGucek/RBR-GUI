@@ -37,6 +37,7 @@ const TIRE_SIZE: Vec2 = Vec2::splat(100.0);
 const BRAKE_SIZE: Vec2 = Vec2::new(25.0, 75.0);
 const GRAPH_SIZE: Vec2 = Vec2::new(WIDTH * 2.0, 200.0);
 const DOT_SIZE: Vec2 = Vec2::splat(1.0);
+const DELTA_SIZE: Vec2 = Vec2::new(350.0, 50.0);
 const DOT_SPACING: u32 = 1;
 const CHECKBOX_SPACING: f32 = 10.0;
 const BRAKE_SPACING: f32 = 5.0;
@@ -112,6 +113,7 @@ enum DisplayState {
     Main,
     Tyres,
     Pedals,
+    Delta,
 }
 
 
@@ -212,11 +214,101 @@ fn main() {
             (
                 main_menu.run_if(in_state(DisplayState::Main)),
                 pedal_menu.run_if(in_state(DisplayState::Pedals)),
-                tyre_menu.run_if(in_state(DisplayState::Tyres))
+                tyre_menu.run_if(in_state(DisplayState::Tyres)),
+                delta_menu.run_if(in_state(DisplayState::Delta)),
         )
     )
     .run();
 }
+
+fn delta_menu(
+    mut windows: Query<&mut Window>,
+    mut egui_ctx: EguiContexts,
+    mut next_state: ResMut<NextState<DisplayState>>,
+    rbr: Res<RBR>,
+) {
+    let mut window = windows.single_mut();
+    window.resolution.set(WIDTH, HEIGHT / 2.0);
+    let gui = egui::Window::new("gui")
+        .title_bar(false)
+        .fixed_pos(ZERO)
+        .default_height(HEIGHT)
+        .default_width(WIDTH)
+        .collapsible(false)
+        .resizable(false)
+        .frame(Frame {
+            inner_margin: Margin::same(0.0),
+            outer_margin: Margin::same(0.0),
+            ..default()
+    });
+    gui.show(egui_ctx.ctx_mut(), |ui| {
+        ui.set_height(HEIGHT);
+        ui.set_width(WIDTH);
+        ui.style_mut()
+            .override_font_id = Some(FontId::new(
+                16.0,
+                 egui::FontFamily::Monospace
+        ));
+        ui.horizontal(|ui| {
+            ui.vertical_centered(|ui| {
+                ui.add_space(SPACING * 0.1);
+                let back = ui.button("Back");
+                if back.clicked() {
+                    next_state.set(DisplayState::Main);
+                }
+                //let (sec, min, hr) = rbr.telemetry.get_time();
+                let min = 2;
+                let sec = 54.343;
+                ui.label(format!("{min} : {sec}"));
+                ui.add_space(SPACING * 0.1);
+                let (response, painter) = ui.allocate_painter(DELTA_SIZE, Sense::hover());
+                let c = response.rect.center();
+                painter.rect_filled(
+                    Rect::from_center_size(
+                        c,
+                        DELTA_SIZE
+                    ), 
+                    Rounding::same(0.0),
+                    Color32::GRAY
+                );
+                let offset = -1.2;
+                let delta_color = if offset > 0.0 {
+                    Color32::GREEN
+                } else {
+                    Color32::RED
+                };
+                let mut pos = c;
+                pos.y -= DELTA_SIZE.y / 2.0;
+                let mut size = Pos2::new(pos.x + offset * 100.0, pos.y + DELTA_SIZE.y);
+                if offset * 100.0 >= DELTA_SIZE.x / 2.0 {
+                    size.x = pos.x + (DELTA_SIZE.x / 2.0);
+                }
+                if offset * 100.0 <= -DELTA_SIZE.x / 2.0 {
+                    size.x = pos.x - (DELTA_SIZE.x / 2.0);
+                }
+                painter.rect_filled(
+                    Rect::from_two_pos(
+                        pos,
+                        size
+                    ),
+                    Rounding::same(0.0),
+                    delta_color, 
+                );
+                ui.style_mut()
+                    .override_font_id = Some(FontId::new(50.0,egui::FontFamily::Monospace
+                ));
+                ui.colored_label(delta_color, format!("{offset}"));
+                ui.style_mut()
+                    .override_font_id = Some(FontId::new(16.0,egui::FontFamily::Monospace
+                ));
+                let best_time: &str = "2:55.332";
+                ui.colored_label(Color32::GREEN, format!("Best time: {best_time}"));
+            });
+        });
+    });
+}
+
+
 
 
 fn pedal_menu(
@@ -236,7 +328,6 @@ fn pedal_menu(
         .default_width(WIDTH)
         .collapsible(false)
         .resizable(false)
-        .min_height(HEIGHT)
         .frame(Frame {
             inner_margin: Margin::same(0.0),
             outer_margin: Margin::same(0.0),
@@ -252,12 +343,8 @@ fn pedal_menu(
                  egui::FontFamily::Monospace
         ));
         ui.horizontal(|ui| {
-            //
             ui.vertical_centered(|ui| {
-                ui.horizontal(|ui| {
-                    ui.add_space(HORIZONTAL_CENTER * 4.0);
-                    ui.label("Pedals");
-                });
+                ui.add_space(SPACING * 0.1);
                 ui.horizontal(|ui| {
                     ui.add_space(HORIZONTAL_CENTER * 4.0 + 10.0);
                     let back = ui.button("back");
@@ -401,8 +488,7 @@ fn tyre_menu(
         .default_height(HEIGHT)
         .default_width(WIDTH)
         .collapsible(false)
-        .resizable(false)
-        .min_height(HEIGHT);
+        .resizable(false);
     gui.show(egui_ctx.ctx_mut(), |ui| {
         ui.style_mut()
             .override_font_id = Some(FontId::new(
@@ -410,7 +496,6 @@ fn tyre_menu(
                  egui::FontFamily::Monospace
         ));
         ui.vertical_centered(|ui| {
-            ui.label("Tyres");
             let back = ui.button("Back");
             if back.clicked() {
                 next_state.set(DisplayState::Main);
@@ -485,8 +570,7 @@ fn main_menu(
         .default_height(HEIGHT)
         .default_width(WIDTH)
         .collapsible(false)
-        .resizable(false)
-        .min_height(HEIGHT);
+        .resizable(false);
     gui.show(egui_ctx.ctx_mut(), |ui| {
         ui.style_mut()
             .override_font_id = Some(FontId::new(
@@ -504,6 +588,7 @@ fn main_menu(
             ui.add_space(SPACING);
             let pedals = ui.button("Pedal Telemetry");
             let tyres = ui.button("Tyre Telemetry");
+            let delta = ui.button("Delta Time");
             ui.add_space(SPACING);
             let p = &socket.address;
             match connection_state_current.get() {
@@ -546,6 +631,9 @@ fn main_menu(
             }
             if tyres.clicked() {
                 next_state.set(DisplayState::Tyres);
+            }
+            if delta.clicked() {
+                next_state.set(DisplayState::Delta);
             }
         });
             
