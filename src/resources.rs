@@ -1,5 +1,3 @@
-#[allow(dead_code)]
-
 use bevy::prelude::*;
 use std::net::UdpSocket;
 use std::io::Error;
@@ -10,8 +8,7 @@ use std::collections::VecDeque;
 use crate::Telemetry;
 use crate::Control;
 // constants.rs
-use crate::UDP_IP;
-use crate::GRAPH_SIZE;
+use crate::constants::*;
 
 #[derive(Resource)]
 pub struct RBR {

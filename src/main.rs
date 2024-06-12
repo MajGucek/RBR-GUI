@@ -1,9 +1,17 @@
 // Hide Terminal
 #![windows_subsystem = "windows"]
 
+// helper.rs
+mod helper;
+use helper::*;
+
+// udp_connection.rs
+mod udp_connection;
+use udp_connection::*;
+
 // telemetry.rs
 mod telemetry;
-use telemetry::{Control, Telemetry};
+use telemetry::*;
 
 // constants.rs
 mod constants;
@@ -33,7 +41,6 @@ use egui::{
     Rect, 
     Rounding, 
     Sense,
-    Ui,
 };
 
 fn main() {
@@ -281,79 +288,6 @@ fn pedal_menu(
     });
 }
 
-fn create_line(
-    ui: &mut Ui,
-    y: f32,
-) {
-    ui.allocate_ui_at_rect(
-            Rect::from_two_pos(
-            Pos2::new(0.0, y),
-            Pos2::new(PEDAL_WIDTH, y + LINE_SIZE.y)
-        ),
-        |ui| {
-            ui.painter().rect_filled(
-                Rect::from_two_pos(
-                    Pos2::new(0.0, y),
-                    Pos2::new(PEDAL_WIDTH, y + LINE_SIZE.y)
-                ),
-                Rounding::same(0.0),
-                LINE_COLOR 
-            );
-        });
-}
-
-fn create_dot(
-    ui: &mut Ui,
-    x: f32,
-    y: f32,
-    color: Color32
-) {
-    ui.allocate_ui_at_rect(
-        Rect::from_center_size(
-            Pos2::new(x, y),
-            DOT_SIZE
-        ),
-        |ui| {
-            ui.painter().circle_filled(
-                Pos2::new(x, y), 
-                DOT_SIZE.x,
-                color 
-            );
-        });
-}
-
-fn create_tire(
-    ui: &mut Ui,
-    temperature: f32,
-) {
-    let (response, painter) = ui.allocate_painter(TIRE_SIZE, Sense::hover());
-    let c = response.rect.center();
-    painter.rect_filled(
-        Rect::from_center_size(
-            c,
-            TIRE_SIZE
-        ), 
-        Rounding::same(0.0),
-        get_color(temperature) 
-    );
-}
-
-fn create_brake(
-    ui: &mut Ui,
-    temperature: f32,
-) {
-    let (response, painter) = ui.allocate_painter(BRAKE_SIZE, Sense::hover());
-    let c = response.rect.center();
-    painter.rect_filled(
-        Rect::from_center_size(
-            c,
-            BRAKE_SIZE
-        ), 
-        Rounding::same(0.0),
-        get_color(temperature) 
-    );
-}
-
 fn tire_menu(
     mut egui_ctx: EguiContexts,
     mut next_state: ResMut<NextState<DisplayState>>,
@@ -428,20 +362,6 @@ fn tire_menu(
         });  
     });
 }
-
-fn get_color(temperature: f32) -> Color32 {
-    if temperature > MAX_TEMP {
-        return Color32::LIGHT_GREEN;
-    }
-    if temperature < MIN_TEMP {
-        return Color32::DARK_BLUE;
-    }
-    let temp: u8 = (temperature - 273.15) as u8;
-    let g: u8 = 255 - temp;
-    let b: u8 = temp;
-    Color32::from_rgb(0, g, b)
-}
-
 
 fn main_menu(
     mut windows: Query<&mut Window>,
@@ -536,56 +456,4 @@ fn main_menu(
         });
             
     });
-}
-
-
-fn connect_udp(
-    mut socket: ResMut<Socket>,
-    mut next_state: ResMut<NextState<ConnectionState>>,
-    port: Res<Port>
-) {
-    let p = &port.port;
-    socket.bind(p);
-    match socket.socket {
-        Ok(_) => {
-            next_state.set(ConnectionState::Connected);
-        },
-        Err(_) => {
-            next_state.set(ConnectionState::Disconnected);
-        },
-    }
-}
-
-fn telemetry_handler(
-    mut rbr: ResMut<RBR>,
-    socket: Res<Socket>,
-    mut next_state: ResMut<NextState<ConnectionState>>,
-    mut pedals: ResMut<Pedals>
-) {
-    
-    let mut buf = [0; 664];
-    let socket = &socket.socket.as_ref();
-    match socket.ok() {
-        Some(udp_socket) => {
-            udp_socket.set_nonblocking(true)
-                .expect("Failed to enter non-blocking mode");
-            match udp_socket.recv(&mut buf).ok() {
-                Some(_) => {
-                    println!("Received data!");
-                    rbr.recv = true;
-                    rbr.get_data(&buf);
-                    pedals.add_data(&rbr.telemetry.control);
-                },
-                None => {
-                    rbr.recv = false;
-                    //println!("Failed recv()");
-                }
-            }
-            
-            
-        },
-        None => {
-            next_state.set(ConnectionState::Disconnected);
-        },
-    }
 }
