@@ -123,18 +123,46 @@ pub struct Telemetry {
     pub car: Car,
 }
 
+const KELVIN_TO_C: f32 = 273.15;
+
 impl Telemetry {
     pub fn format(&mut self) {
         self.control.brake *= 100.0;
         self.control.throttle *= 100.0;
         self.control.clutch *= 100.0;
         self.control.gear -= 1;
+        self.car.suspension_lf.wheel.brake_disk.temperature -= KELVIN_TO_C;
+        self.car.suspension_rf.wheel.brake_disk.temperature -= KELVIN_TO_C;
+        self.car.suspension_lb.wheel.brake_disk.temperature -= KELVIN_TO_C;
+        self.car.suspension_rb.wheel.brake_disk.temperature -= KELVIN_TO_C;
+        self.car.suspension_lf.wheel.tire.temperature -= KELVIN_TO_C;
+        self.car.suspension_rf.wheel.tire.temperature -= KELVIN_TO_C;
+        self.car.suspension_lb.wheel.tire.temperature -= KELVIN_TO_C;
+        self.car.suspension_rb.wheel.tire.temperature -= KELVIN_TO_C;
     }
-    pub fn get_time(&self) -> (f32, f32, f32) {
+    
+    pub fn get_time(&self) -> Time {
         let race_time: &f32 = &self.stage.race_time;
-        let hr: f32 = (race_time / 3600.0).round();
-        let min: f32 = (race_time / 60.0).round();
-        let sec: f32 = f32::trunc(race_time * 1000.0) / 1000.0;
-        (sec, min, hr)
+        let mut time: Time = Default::default();
+        time.seconds = f32::trunc(race_time * 1000.0) / 1000.0;
+        time.minutes = (race_time / 60.0).round();
+        time.hours = (race_time / 3600.0).round();
+        time
+    }
+}
+
+
+pub struct Time {
+    pub seconds: f32,
+    pub minutes: f32,
+    pub hours: f32,
+}
+impl Default for Time {
+    fn default() -> Self {
+        Time {
+            seconds: 0.0,
+            minutes: 0.0,
+            hours: 0.0,
+        }
     }
 }
