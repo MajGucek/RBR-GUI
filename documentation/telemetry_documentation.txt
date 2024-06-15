@@ -1,19 +1,20 @@
 Special thanks to https://github.com/Detegr, for this documentation.
 
-F32, "", "progress"                                    // 8.29773
-F32, "s", "raceTime"                                   // 0.00000
-F32, "km/h", "speed"                                   // 0.00000
-F32, "RPM", "engineRotation"                           // 1212.53                       
-I16, "", "gear"                                        // 1
-F32, "", "driveLineLocation"                           // 164.393                          
-F32, "m", "travelDistance"                             // 0.00000                       
-F32, "m", "distanceToEnd"                              // 5220.61                      
+F32, "", "progress"                                    // 8.29773 .
+F32, "s", "raceTime"                                   // 0.00000 .
+F32, "", "driveLineLocation"                           // 164.393 .                       
+F32, "m", "travelDistance"                             // 0.00000 . total_steps                    
+F32, "m", "distanceToEnd"                              // 5220.61 .  
+//                  
 F32, "", "steering"                                    // 0.0213779
 F32, "", "throttle"                                    // 0.00000
 F32, "", "brake"                                       // 0.00000
 F32, "", "clutch"                                      // 0.00000
+I16, "", "gear"                                        // 1
 F32, "", "footbrakePressure"                           // 0.00000                          
-F32, "", "handbrakePressure"                           // 7.80000e+06                      
+F32, "", "handbrakePressure"                           // 7.80000e+06   
+F32, "RPM", "engineRotation"                           // 1212.53     
+F32, "km/h", "speed"                                   // 0.00000               
 F32, "K", "radiatorCoolantHeatState.temperature"       // 367.351                                             
 F32, "K", "engineCoolantHeatState.temperature"         // 367.548                                           
 F32, "K", "engineTemperature"                          // 358.479                          

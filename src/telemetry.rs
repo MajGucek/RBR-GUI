@@ -109,15 +109,15 @@ pub struct Control {
 #[derive(Deserialize, Default)]
 pub struct Stage {
     pub index: i32,
-    pub progress: f32,
+    pub progress: f32, // meters
     pub race_time: f32, // seconds
-    pub drive_line_location: f32,
-    pub distance_to_end: f32,
+    pub drive_line_location: f32, // no units?
+    pub distance_to_end: f32, // meters
 }
 
 #[derive(Deserialize, Default)]
 pub struct Telemetry {
-    pub total_steps: u32,
+    pub total_steps: u32, // meters
     pub stage: Stage,
     pub control: Control,
     pub car: Car,

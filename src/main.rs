@@ -63,11 +63,16 @@ fn main() {
         .init_resource::<Port>()
         .init_resource::<Pedals>()
         .init_resource::<PedalCheckboxes>()
+        .init_resource::<BestTime>()
+        .init_resource::<CurrentTime>()
+        .init_resource::<DeltaTime>()
         .add_systems(
             Update,
             (   
                 
                 telemetry_handler
+                    .run_if(in_state(ConnectionState::Connected)),
+                delta_handler
                     .run_if(in_state(ConnectionState::Connected)),
                 connect_udp
                     .run_if(in_state(ConnectionState::Disconnected))
@@ -86,11 +91,69 @@ fn main() {
     .run();
 }
 
+
+fn delta_handler(
+    rbr: Res<RBR>,
+    mut current_time: ResMut<CurrentTime>,
+    mut best_time: ResMut<BestTime>,
+    mut delta_time: ResMut<DeltaTime>
+) {
+    if best_time.final_time > 0.0 {
+        // best time exists, can compare to current_time
+        if rbr.telemetry.stage.distance_to_end == 0.0 {
+            if best_time.is_faster(rbr.telemetry.stage.race_time) {
+                best_time.add_new_best_time(
+                    rbr.telemetry.stage.race_time,
+                    &current_time.splits,
+                    rbr.telemetry.stage.index
+                );
+            }
+            current_time.reset();
+            delta_time.delta = 0.0;
+        }
+
+
+    } else {
+        // best time doesn't exist, just display delta as 0.0
+        delta_time.delta = 0.0;
+        current_time.add_split(
+            rbr.telemetry.stage.race_time,
+            rbr.telemetry.total_steps
+        );
+    }
+
+
+    if rbr.telemetry.stage.distance_to_end == 0.0 {
+        if best_time.is_faster(rbr.telemetry.stage.race_time) {
+            best_time.add_new_best_time(
+                rbr.telemetry.stage.race_time,
+                &current_time.splits
+            );
+        }
+        current_time.reset();
+        delta_time.delta = 0.0;
+    } else {
+        if best_time.final_time > 0.0 {
+            // best_time exits
+            let step = rbr.telemetry.total_steps as usize;
+            delta_time.delta = best_time.splits[step].time - current_time.splits[step].time;
+        } else {
+            // best_time doesn't exist
+            delta_time.delta = 0.0;
+        }
+        current_time.add_split(
+            rbr.telemetry.stage.race_time,
+            rbr.telemetry.total_steps
+        );
+    }
+}
+
 fn delta_menu(
     mut windows: Query<&mut Window>,
     mut egui_ctx: EguiContexts,
     mut next_state: ResMut<NextState<DisplayState>>,
     rbr: Res<RBR>,
+    delta_time: Res<DeltaTime>
 ) {
     let mut window = windows.single_mut();
     window.resolution.set(WIDTH, HEIGHT / 2.0);
@@ -134,7 +197,7 @@ fn delta_menu(
                     Rounding::same(0.0),
                     Color32::GRAY
                 );
-                let offset = 0.0;
+                let offset = delta_time.delta;
                 let delta_color = if offset == 0.0 {
                     Color32::GRAY
                 } else if offset > 0.0 {
@@ -177,9 +240,11 @@ fn pedal_menu(
     mut windows: Query<&mut Window>,
     mut egui_ctx: EguiContexts,
     mut next_state: ResMut<NextState<DisplayState>>,
-    pedals: Res<Pedals>,
+    rbr: Res<RBR>,
+    mut pedals: ResMut<Pedals>,
     mut checkboxes: ResMut<PedalCheckboxes>
 ) {
+    pedals.add_data(&rbr.telemetry.control);
     let mut window = windows.single_mut();
     window.resolution.set(PEDAL_WIDTH, PEDAL_HEIGHT);
     let gui = egui::Window::new("gui")

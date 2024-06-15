@@ -25,7 +25,6 @@ pub fn telemetry_handler(
     mut rbr: ResMut<RBR>,
     socket: Res<Socket>,
     mut next_state: ResMut<NextState<ConnectionState>>,
-    mut pedals: ResMut<Pedals>
 ) {
     
     let mut buf = [0; 664];
@@ -36,14 +35,11 @@ pub fn telemetry_handler(
                 .expect("Failed to enter non-blocking mode");
             match udp_socket.recv(&mut buf).ok() {
                 Some(_) => {
-                    println!("Received data!");
                     rbr.recv = true;
                     rbr.get_data(&buf);
-                    pedals.add_data(&rbr.telemetry.control);
                 },
                 None => {
                     rbr.recv = false;
-                    //println!("Failed recv()");
                 }
             }
             

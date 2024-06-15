@@ -1,3 +1,5 @@
+#[allow(dead_code)]
+
 use bevy::prelude::*;
 use std::net::UdpSocket;
 use std::io::Error;
@@ -135,3 +137,91 @@ impl Default for PedalCheckboxes {
         }
     }
 }
+
+#[derive(Clone)]
+pub struct TimePos {
+    pub time: f32,
+    pub pos: u32,
+}
+
+#[derive(Resource)]
+pub struct BestTime {
+    pub splits: Vec<TimePos>,
+    pub final_time: f32, // seconds
+    pub stage_index: i32,
+}
+impl BestTime {
+    pub fn is_faster(&self, time: f32) -> bool {
+        if time < self.final_time {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn add_new_best_time(&mut self, time: f32, splits: &Vec<TimePos>, stage_index: i32) {
+        self.final_time = time;
+        self.splits = splits.clone();
+        self.stage_index = stage_index;
+    }
+}
+impl Default for BestTime {
+    fn default() -> Self {
+        BestTime {
+            final_time: 0.0,
+            splits: Vec::new(),
+            stage_index: 0,
+        }
+    }
+}
+
+
+#[derive(Resource, Clone)]
+pub struct CurrentTime {
+    pub splits: Vec<TimePos>,
+    pub stage_index: i32,
+}
+impl CurrentTime {
+    pub fn reset(&mut self) {
+        self.splits.clear();
+        self.stage_index = 0;
+    }
+    pub fn add_split(&mut self, time: f32, pos: u32) {
+        if pos == self.get_prev_pos() && self.splits.len() > 0 {
+            self.splits.pop();
+        }
+        self.splits.push(TimePos {time, pos});
+    }
+
+    fn get_prev_pos(&self) -> u32 {
+        if self.splits.len() > 0 {
+            self.splits[self.splits.len() - 1].pos
+        } else {
+            0
+        }
+    }
+
+}
+
+impl Default for CurrentTime {
+    fn default() -> Self {
+        CurrentTime {
+            splits: Vec::new(),
+            stage_index: 0,
+        }
+    }
+}
+
+
+
+#[derive(Resource)]
+pub struct DeltaTime {
+    pub delta: f32,
+}
+impl Default for DeltaTime {
+    fn default() -> Self {
+        DeltaTime {
+            delta: 0.0
+        }
+    }
+}
+
