@@ -23,10 +23,7 @@ use resources::*;
 
 // UI
 use bevy::{
-    prelude::*,
-    window::WindowLevel,
-    utils::Duration,
-    time::common_conditions::on_timer
+    prelude::*, time::common_conditions::on_timer, utils::Duration, window::WindowLevel, winit::WinitSettings, winit::UpdateMode
 };
 use bevy_egui::{
     EguiContexts, 
@@ -49,13 +46,17 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 resizable: false,
-                position: WindowPosition::At(IVec2 { x: 10, y: 10 }),
+                position: WindowPosition::At(IVec2 { x: 5, y: 40 }),
                 window_level: WindowLevel::AlwaysOnTop,
                 ..default()
             }),
             ..default()
         }))
         .add_plugins(EguiPlugin)
+        .insert_resource(WinitSettings {
+            focused_mode: UpdateMode::Continuous,
+            unfocused_mode: UpdateMode::Continuous,
+        })
         .insert_state(DisplayState::Main)
         .insert_state(ConnectionState::Disconnected)
         .init_resource::<Socket>()
@@ -98,7 +99,7 @@ fn delta_handler(
     mut best_time: ResMut<BestTime>,
     mut delta_time: ResMut<DeltaTime>
 ) {
-    if best_time.final_time > 0.0 {
+    if best_time.exists() {
         // best time exists, can compare to current_time
         if rbr.telemetry.stage.distance_to_end == 0.0 {
             if best_time.is_faster(rbr.telemetry.stage.race_time) {
@@ -125,15 +126,17 @@ fn delta_handler(
 
     if rbr.telemetry.stage.distance_to_end == 0.0 {
         if best_time.is_faster(rbr.telemetry.stage.race_time) {
+            /*
             best_time.add_new_best_time(
                 rbr.telemetry.stage.race_time,
                 &current_time.splits
             );
+            */
         }
         current_time.reset();
         delta_time.delta = 0.0;
     } else {
-        if best_time.final_time > 0.0 {
+        if best_time.exists() {
             // best_time exits
             let step = rbr.telemetry.total_steps as usize;
             delta_time.delta = best_time.splits[step].time - current_time.splits[step].time;
@@ -185,7 +188,7 @@ fn delta_menu(
                     next_state.set(DisplayState::Main);
                 }
                 let time = rbr.telemetry.get_time();
-                ui.label(format!("{} : {}", time.minutes, time.seconds));
+                ui.label(format_time(time.minutes, time.seconds));
                 ui.add_space(SPACING * 0.1);
                 let (response, painter) = ui.allocate_painter(DELTA_SIZE, Sense::hover());
                 let c = response.rect.center();
@@ -246,12 +249,12 @@ fn pedal_menu(
 ) {
     pedals.add_data(&rbr.telemetry.control);
     let mut window = windows.single_mut();
-    window.resolution.set(PEDAL_WIDTH, PEDAL_HEIGHT);
+    window.resolution.set(GRAPH_SIZE.x, GRAPH_SIZE.y);
     let gui = egui::Window::new("gui")
         .title_bar(false)
         .fixed_pos(ZERO)
-        .default_height(PEDAL_HEIGHT)
-        .default_width(PEDAL_WIDTH)
+        .default_height(GRAPH_SIZE.y)
+        .default_width(GRAPH_SIZE.x)
         .collapsible(false)
         .frame(Frame {
             fill: MENU_BG,
@@ -261,8 +264,8 @@ fn pedal_menu(
         });
     
     gui.show(egui_ctx.ctx_mut(), |ui| {
-        ui.set_height(PEDAL_HEIGHT);
-        ui.set_width(PEDAL_WIDTH);
+        ui.set_height(GRAPH_SIZE.y);
+        ui.set_width(GRAPH_SIZE.x);
         ui.style_mut()
             .override_font_id = Some(FontId::new(
                 16.0,
@@ -311,7 +314,7 @@ fn pedal_menu(
                 if checkboxes.throttle {
                     create_dot(
                         ui, 
-                        (i as f32) * DOT_SPACING,
+                        i as f32,
                         GRAPH_SIZE.y - (pedals.throttle[i as usize]),
                         Color32::GREEN
                     );
@@ -319,7 +322,7 @@ fn pedal_menu(
                 if checkboxes.brake {
                     create_dot(
                         ui, 
-                        (i as f32) * DOT_SPACING, 
+                        i as f32, 
                         GRAPH_SIZE.y - (pedals.brake[i as usize]),
                         Color32::RED
                     );
@@ -327,7 +330,7 @@ fn pedal_menu(
                 if checkboxes.handbrake {
                     create_dot(
                         ui, 
-                        (i as f32) * DOT_SPACING, 
+                        i as f32, 
                         GRAPH_SIZE.y - (pedals.handbrake[i as usize]),
                         Color32::BLUE
                     );
@@ -335,7 +338,7 @@ fn pedal_menu(
                 if checkboxes.clutch {
                     create_dot(
                         ui, 
-                        (i as f32) * DOT_SPACING, 
+                        i as f32, 
                         GRAPH_SIZE.y - (pedals.clutch[i as usize]),
                         Color32::LIGHT_BLUE
                     );
@@ -343,7 +346,7 @@ fn pedal_menu(
                 if checkboxes.gear {
                     create_dot(
                         ui, 
-                        (i as f32) * DOT_SPACING, 
+                        i as f32, 
                         GRAPH_SIZE.y - (((pedals.gear[i as usize]) as f32) * 15.0),
                         Color32::YELLOW
                     );
@@ -439,6 +442,7 @@ fn main_menu(
     rbr: Res<RBR>
 ) {
     let mut window = windows.single_mut();
+    window.name = Some("RBR-GUI".to_string());
     window.resolution.set(WIDTH, HEIGHT);
     let gui = egui::Window::new("gui")
         .title_bar(false)
@@ -484,15 +488,9 @@ fn main_menu(
             }
             
             if rbr.recv {
-                ui.colored_label(Color32::GREEN, "Connected!");
-            } else {
-                ui.colored_label(Color32::RED, "Not connected!");
-            };
-            
-            if rbr.recv {
                 let time = rbr.telemetry.get_time();
-                println!("{}: {}: {}", time.hours, time.minutes, time.seconds);
-                ui.label(format!("Race time: {}", time.seconds));
+                
+                ui.label(format_time(time.minutes, time.seconds));
             }
             
             

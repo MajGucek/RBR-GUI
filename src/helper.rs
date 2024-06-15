@@ -1,4 +1,5 @@
-use egui::{Color32, Pos2, Ui, Rect, Rounding, Sense};
+
+use egui::{Color32, Pos2, Rect, Rounding, Sense, TextBuffer, Ui};
 // constants.rs
 use crate::constants::*;
 
@@ -9,13 +10,13 @@ pub fn create_line(
     ui.allocate_ui_at_rect(
             Rect::from_two_pos(
             Pos2::new(0.0, y),
-            Pos2::new(PEDAL_WIDTH, y + LINE_SIZE.y)
+            Pos2::new(GRAPH_SIZE.x, y + LINE_SIZE.y)
         ),
         |ui| {
             ui.painter().rect_filled(
                 Rect::from_two_pos(
                     Pos2::new(0.0, y),
-                    Pos2::new(PEDAL_WIDTH, y + LINE_SIZE.y)
+                    Pos2::new(GRAPH_SIZE.x, y + LINE_SIZE.y)
                 ),
                 Rounding::same(0.0),
                 LINE_COLOR 
@@ -88,4 +89,28 @@ pub fn get_color(temperature: f32) -> Color32 {
     let g: u8 = 255 - temp;
     let b: u8 = temp;
     Color32::from_rgb(0, g, b)
+}
+
+
+
+pub fn format_time(minutes: f32, seconds: f32) -> String {
+    let mut time: String = String::new(); 
+    if minutes < 10.0 {
+        time.push_str(format!("0{}", minutes).as_str());
+    } else {
+        time.push_str(format!("{}", minutes).as_str());
+    }
+    time.push_str(":".as_str());
+    if seconds < 10.0 {
+        time.push_str(format!("0{}", seconds).as_str());
+    } else {
+        time.push_str(format!("{}", seconds).as_str());
+    }
+    let remainder = (seconds.fract() * 100.0).round();
+    if remainder == 0.0 {
+        time.push_str(".00".as_str());
+    } else if remainder % 10.0 == 0.0 {
+        time.push_str("0".as_str());
+    }
+    time
 }

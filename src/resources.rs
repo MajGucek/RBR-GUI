@@ -151,6 +151,9 @@ pub struct BestTime {
     pub stage_index: i32,
 }
 impl BestTime {
+    pub fn exists(&self) -> bool {
+        self.final_time > 0.0
+    }
     pub fn is_faster(&self, time: f32) -> bool {
         if time < self.final_time {
             true

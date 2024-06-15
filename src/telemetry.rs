@@ -127,6 +127,7 @@ const KELVIN_TO_C: f32 = 273.15;
 
 impl Telemetry {
     pub fn format(&mut self) {
+        self.stage.race_time += 0.7;
         self.control.brake *= 100.0;
         self.control.throttle *= 100.0;
         self.control.clutch *= 100.0;
@@ -142,11 +143,14 @@ impl Telemetry {
     }
     
     pub fn get_time(&self) -> Time {
+        // https://www.inchcalculator.com/seconds-to-time-calculator/
         let race_time: &f32 = &self.stage.race_time;
         let mut time: Time = Default::default();
-        time.seconds = f32::trunc(race_time * 1000.0) / 1000.0;
-        time.minutes = (race_time / 60.0).round();
-        time.hours = (race_time / 3600.0).round();
+        let hr = race_time / 3600.0;
+        time.hours = hr.floor();
+        let min = hr.fract() * 60.0;
+        time.minutes = min.floor();
+        time.seconds = f32::trunc((min.fract() * 60.0) * 100.0) / 100.0;
         time
     }
 }
