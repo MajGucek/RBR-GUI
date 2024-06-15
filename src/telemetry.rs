@@ -127,7 +127,7 @@ const KELVIN_TO_C: f32 = 273.15;
 
 impl Telemetry {
     pub fn format(&mut self) {
-        self.stage.race_time += 0.7;
+        //self.stage.race_time += 0.7;
         self.control.brake *= 100.0;
         self.control.throttle *= 100.0;
         self.control.clutch *= 100.0;

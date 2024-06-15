@@ -19,7 +19,12 @@ pub const WORD_SPACING: f32 = 70.0;
 pub const BRAKE_SPACING: f32 = 5.0;
 pub const BRAKE_VERTICAL_SPACING: f32 = 10.0;
 pub const TIRE_HORIZONTAL_SPACING: f32 = 30.0;
-pub const MAX_TEMP: f32 = 300.0 + 273.15;
-pub const MIN_TEMP: f32 = 0.0 + 273.15;
+
+pub const MIN_TIRE_TEMP: f32 = 30.0;
+pub const MAX_TIRE_TEMP: f32 = 75.0;
+
+pub const MIN_BRAKE_TEMP: f32 = 180.0;
+pub const MAX_BRAKE_TEMP: f32 = 360.0;
+
 pub const MENU_BG: Color32 = Color32::from_rgb(32,32,32);
 pub const LINE_COLOR: Color32 = Color32::GRAY;

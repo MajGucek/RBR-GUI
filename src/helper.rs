@@ -48,6 +48,7 @@ pub fn create_tire(
     ui: &mut Ui,
     temperature: f32,
 ) {
+    println!("tire temp: {}", temperature);
     let (response, painter) = ui.allocate_painter(TIRE_SIZE, Sense::hover());
     let c = response.rect.center();
     painter.rect_filled(
@@ -56,7 +57,7 @@ pub fn create_tire(
             TIRE_SIZE
         ), 
         Rounding::same(0.0),
-        get_color(temperature) 
+        get_tire_color(temperature) 
     );
 }
 
@@ -64,6 +65,7 @@ pub fn create_brake(
     ui: &mut Ui,
     temperature: f32,
 ) {
+    println!("brake temp: {}", temperature);
     let (response, painter) = ui.allocate_painter(BRAKE_SIZE, Sense::hover());
     let c = response.rect.center();
     painter.rect_filled(
@@ -72,22 +74,33 @@ pub fn create_brake(
             BRAKE_SIZE
         ), 
         Rounding::same(0.0),
-        get_color(temperature) 
+        get_brake_color(temperature) 
     );
 }
 
 
 
-pub fn get_color(temperature: f32) -> Color32 {
-    if temperature > MAX_TEMP {
+pub fn get_tire_color(temperature: f32) -> Color32 {
+    if temperature > MAX_TIRE_TEMP {
         return Color32::LIGHT_GREEN;
     }
-    if temperature < MIN_TEMP {
+    if temperature < MIN_TIRE_TEMP {
         return Color32::DARK_BLUE;
     }
-    let temp: u8 = (temperature - 273.15) as u8;
-    let g: u8 = 255 - temp;
-    let b: u8 = temp;
+    let b: u8 = 255 - (temperature * 3.0) as u8;
+    let g: u8 = (temperature * 3.0) as u8;
+    Color32::from_rgb(0, g, b)
+}
+
+fn get_brake_color(temperature: f32) -> Color32 {
+    if temperature > MAX_BRAKE_TEMP {
+        return Color32::LIGHT_GREEN;
+    }
+    if temperature < MIN_BRAKE_TEMP {
+        return Color32::DARK_BLUE;
+    }
+    let b: u8 = 255 - (temperature / 2.0) as u8;
+    let g: u8 = (temperature / 2.0) as u8;
     Color32::from_rgb(0, g, b)
 }
 

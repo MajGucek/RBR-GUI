@@ -1,5 +1,5 @@
 // Hide Terminal
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 // helper.rs
 mod helper;
@@ -23,7 +23,7 @@ use resources::*;
 
 // UI
 use bevy::{
-    prelude::*, time::common_conditions::on_timer, utils::Duration, window::WindowLevel, winit::WinitSettings, winit::UpdateMode
+    prelude::*, time::common_conditions::on_timer, utils::Duration, window::WindowLevel, winit::WinitSettings, winit::UpdateMode, render::settings::RenderCreation, render::settings::WgpuSettings, render::RenderPlugin, render::settings::Backends
 };
 use bevy_egui::{
     EguiContexts, 
@@ -51,7 +51,15 @@ fn main() {
                 ..default()
             }),
             ..default()
-        }))
+        })
+        .set(RenderPlugin {
+            render_creation: RenderCreation::Automatic(WgpuSettings {
+                backends: Some(Backends::VULKAN),
+                ..default()
+            }),
+            ..default()
+        })
+        )
         .add_plugins(EguiPlugin)
         .insert_resource(WinitSettings {
             focused_mode: UpdateMode::Continuous,
@@ -103,7 +111,7 @@ fn delta_handler(
         // best time exists, can compare to current_time
         if rbr.telemetry.stage.distance_to_end == 0.0 {
             if best_time.is_faster(rbr.telemetry.stage.race_time) {
-                best_time.add_new_best_time(
+                best_time.new_best_time(
                     rbr.telemetry.stage.race_time,
                     &current_time.splits,
                     rbr.telemetry.stage.index
@@ -112,8 +120,6 @@ fn delta_handler(
             current_time.reset();
             delta_time.delta = 0.0;
         }
-
-
     } else {
         // best time doesn't exist, just display delta as 0.0
         delta_time.delta = 0.0;
@@ -124,14 +130,13 @@ fn delta_handler(
     }
 
 
-    if rbr.telemetry.stage.distance_to_end == 0.0 {
+    if rbr.is_stage_over() {
         if best_time.is_faster(rbr.telemetry.stage.race_time) {
-            /*
-            best_time.add_new_best_time(
+            best_time.new_best_time(
                 rbr.telemetry.stage.race_time,
-                &current_time.splits
+                &current_time.splits,
+                rbr.telemetry.stage.index
             );
-            */
         }
         current_time.reset();
         delta_time.delta = 0.0;
@@ -442,7 +447,6 @@ fn main_menu(
     rbr: Res<RBR>
 ) {
     let mut window = windows.single_mut();
-    window.name = Some("RBR-GUI".to_string());
     window.resolution.set(WIDTH, HEIGHT);
     let gui = egui::Window::new("gui")
         .title_bar(false)

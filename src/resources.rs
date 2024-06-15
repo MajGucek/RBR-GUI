@@ -22,6 +22,9 @@ impl RBR {
         self.telemetry = deserialize(&data).unwrap();
         self.telemetry.format();
     }
+    pub fn is_stage_over(&self) -> bool {
+        self.telemetry.stage.distance_to_end <= 0.0
+    }
 }
 impl Default for RBR {
     fn default() -> Self {
@@ -161,7 +164,7 @@ impl BestTime {
             false
         }
     }
-    pub fn add_new_best_time(&mut self, time: f32, splits: &Vec<TimePos>, stage_index: i32) {
+    pub fn new_best_time(&mut self, time: f32, splits: &Vec<TimePos>, stage_index: i32) {
         self.final_time = time;
         self.splits = splits.clone();
         self.stage_index = stage_index;
