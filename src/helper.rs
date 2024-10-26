@@ -2,6 +2,7 @@
 use egui::{Color32, Pos2, Rect, Rounding, Sense, TextBuffer, Ui};
 // constants.rs
 use crate::constants::*;
+use crate::telemetry::Suspension;
 
 pub fn create_line(
     ui: &mut Ui,
@@ -48,7 +49,7 @@ pub fn create_tire(
     ui: &mut Ui,
     temperature: f32,
 ) {
-    println!("tire temp: {}", temperature);
+    //println!("tire temp: {}", temperature);
     let (response, painter) = ui.allocate_painter(TIRE_SIZE, Sense::hover());
     let c = response.rect.center();
     painter.rect_filled(
@@ -65,7 +66,7 @@ pub fn create_brake(
     ui: &mut Ui,
     temperature: f32,
 ) {
-    println!("brake temp: {}", temperature);
+    //println!("brake temp: {}", temperature);
     let (response, painter) = ui.allocate_painter(BRAKE_SIZE, Sense::hover());
     let c = response.rect.center();
     painter.rect_filled(
@@ -75,6 +76,22 @@ pub fn create_brake(
         ), 
         Rounding::same(0.0),
         get_brake_color(temperature) 
+    );
+}
+
+pub fn create_suspension(
+    ui: &mut Ui,
+    spring: Suspension,
+) {
+    let (response, painter) = ui.allocate_painter(SUSPENSION_SIZE, Sense::hover());
+    let c = response.rect.center();
+    painter.rect_filled(
+        Rect::from_center_size(
+            c,
+            SUSPENSION_SIZE
+        ), 
+        Rounding::same(0.0),
+        Color32::RED
     );
 }
 

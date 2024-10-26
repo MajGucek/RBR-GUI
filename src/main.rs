@@ -33,11 +33,7 @@ use egui::{
     Color32, 
     FontId, 
     Frame, 
-    Margin, 
-    Pos2, 
-    Rect, 
-    Rounding, 
-    Sense,
+    Margin,
 };
 
 fn main() {
@@ -72,16 +68,11 @@ fn main() {
         .init_resource::<Port>()
         .init_resource::<Pedals>()
         .init_resource::<PedalCheckboxes>()
-        .init_resource::<BestTime>()
-        .init_resource::<CurrentTime>()
-        .init_resource::<DeltaTime>()
         .add_systems(
             Update,
             (   
                 
                 telemetry_handler
-                    .run_if(in_state(ConnectionState::Connected)),
-                delta_handler
                     .run_if(in_state(ConnectionState::Connected)),
                 connect_udp
                     .run_if(in_state(ConnectionState::Disconnected))
@@ -94,155 +85,13 @@ fn main() {
                 main_menu.run_if(in_state(DisplayState::Main)),
                 pedal_menu.run_if(in_state(DisplayState::Pedals)),
                 tire_menu.run_if(in_state(DisplayState::Tires)),
-                delta_menu.run_if(in_state(DisplayState::Delta)),
+                suspension_menu.run_if(in_state(DisplayState::Suspension))
         )
     )
     .run();
 }
 
 
-fn delta_handler(
-    rbr: Res<RBR>,
-    mut current_time: ResMut<CurrentTime>,
-    mut best_time: ResMut<BestTime>,
-    mut delta_time: ResMut<DeltaTime>
-) {
-    if best_time.exists() {
-        // best time exists, can compare to current_time
-        if rbr.telemetry.stage.distance_to_end == 0.0 {
-            if best_time.is_faster(rbr.telemetry.stage.race_time) {
-                best_time.new_best_time(
-                    rbr.telemetry.stage.race_time,
-                    &current_time.splits,
-                    rbr.telemetry.stage.index
-                );
-            }
-            current_time.reset();
-            delta_time.delta = 0.0;
-        }
-    } else {
-        // best time doesn't exist, just display delta as 0.0
-        delta_time.delta = 0.0;
-        current_time.add_split(
-            rbr.telemetry.stage.race_time,
-            rbr.telemetry.total_steps
-        );
-    }
-
-
-    if rbr.is_stage_over() {
-        if best_time.is_faster(rbr.telemetry.stage.race_time) {
-            best_time.new_best_time(
-                rbr.telemetry.stage.race_time,
-                &current_time.splits,
-                rbr.telemetry.stage.index
-            );
-        }
-        current_time.reset();
-        delta_time.delta = 0.0;
-    } else {
-        if best_time.exists() {
-            // best_time exits
-            let step = rbr.telemetry.total_steps as usize;
-            delta_time.delta = best_time.splits[step].time - current_time.splits[step].time;
-        } else {
-            // best_time doesn't exist
-            delta_time.delta = 0.0;
-        }
-        current_time.add_split(
-            rbr.telemetry.stage.race_time,
-            rbr.telemetry.total_steps
-        );
-    }
-}
-
-fn delta_menu(
-    mut windows: Query<&mut Window>,
-    mut egui_ctx: EguiContexts,
-    mut next_state: ResMut<NextState<DisplayState>>,
-    rbr: Res<RBR>,
-    delta_time: Res<DeltaTime>
-) {
-    let mut window = windows.single_mut();
-    window.resolution.set(WIDTH, HEIGHT / 2.0);
-    let gui = egui::Window::new("gui")
-        .title_bar(false)
-        .fixed_pos(ZERO)
-        .default_height(HEIGHT)
-        .default_width(WIDTH)
-        .collapsible(false)
-        .frame(Frame {
-            inner_margin: Margin::same(0.0),
-            outer_margin: Margin::same(0.0),
-            fill: MENU_BG,
-            ..default()
-    });
-    gui.show(egui_ctx.ctx_mut(), |ui| {
-        ui.set_height(HEIGHT);
-        ui.set_width(WIDTH);
-        ui.style_mut()
-            .override_font_id = Some(FontId::new(
-                20.0,
-                 egui::FontFamily::Monospace
-        ));
-        ui.horizontal(|ui| {
-            ui.vertical_centered(|ui| {
-                ui.add_space(SPACING * 0.1);
-                let back = ui.button("Back");
-                if back.clicked() {
-                    next_state.set(DisplayState::Main);
-                }
-                let time = rbr.telemetry.get_time();
-                ui.label(format_time(time.minutes, time.seconds));
-                ui.add_space(SPACING * 0.1);
-                let (response, painter) = ui.allocate_painter(DELTA_SIZE, Sense::hover());
-                let c = response.rect.center();
-                painter.rect_filled(
-                    Rect::from_center_size(
-                        c,
-                        DELTA_SIZE
-                    ), 
-                    Rounding::same(0.0),
-                    Color32::GRAY
-                );
-                let offset = delta_time.delta;
-                let delta_color = if offset == 0.0 {
-                    Color32::GRAY
-                } else if offset > 0.0 {
-                    Color32::GREEN
-                } else {
-                    Color32::RED
-                };
-                let mut pos = c;
-                pos.y -= DELTA_SIZE.y / 2.0;
-                let mut size = Pos2::new(pos.x + offset * 100.0, pos.y + DELTA_SIZE.y);
-                if offset * 100.0 >= DELTA_SIZE.x / 2.0 {
-                    size.x = pos.x + (DELTA_SIZE.x / 2.0);
-                }
-                if offset * 100.0 <= -DELTA_SIZE.x / 2.0 {
-                    size.x = pos.x - (DELTA_SIZE.x / 2.0);
-                }
-                painter.rect_filled(
-                    Rect::from_two_pos(
-                        pos,
-                        size
-                    ),
-                    Rounding::same(0.0),
-                    delta_color, 
-                );
-                ui.style_mut()
-                    .override_font_id = Some(FontId::new(50.0,egui::FontFamily::Monospace
-                ));
-                ui.colored_label(delta_color, format!("{offset}"));
-                ui.style_mut()
-                    .override_font_id = Some(FontId::new(16.0,egui::FontFamily::Monospace
-                ));
-                let best_time: &str = "2:55.332";
-                ui.colored_label(Color32::GREEN, format!("Best time: {best_time}"));
-            });
-        });
-    });
-}
 
 fn pedal_menu(
     mut windows: Query<&mut Window>,
@@ -361,6 +210,48 @@ fn pedal_menu(
     });
 }
 
+
+fn suspension_menu(
+    mut egui_ctx: EguiContexts,
+    mut next_state: ResMut<NextState<DisplayState>>,
+    rbr: Res<RBR>
+) {
+    let gui = egui::Window::new("gui")
+        .title_bar(false)
+        .fixed_pos(ZERO)
+        .default_height(HEIGHT)
+        .default_width(WIDTH)
+        .collapsible(false)
+        .frame(Frame {
+            fill: MENU_BG,
+            inner_margin: Margin::same(0.0),
+            outer_margin: Margin::same(0.0),
+            ..default()
+        });
+    gui.show(egui_ctx.ctx_mut(), |ui| {
+        ui.style_mut()
+            .override_font_id = Some(FontId::new(
+                20.0,
+                 egui::FontFamily::Monospace
+        ));
+        ui.vertical_centered(|ui| {
+            ui.add_space(SPACING * 0.1);
+            let back = ui.button("Back");
+            if back.clicked() {
+                next_state.set(DisplayState::Main);
+            }
+        });
+
+        
+        ui.vertical(|ui| {
+            ui.add_space(BRAKE_VERTICAL_SPACING);
+            let sus_LF = rbr.telemetry.car.suspension_lf;
+            create_suspension(ui, sus_LF);
+        });  
+    });
+}
+
+
 fn tire_menu(
     mut egui_ctx: EguiContexts,
     mut next_state: ResMut<NextState<DisplayState>>,
@@ -476,7 +367,7 @@ fn main_menu(
             ui.add_space(SPACING);
             let pedals = ui.button("Pedal Telemetry");
             let tires = ui.button("Tire Telemetry");
-            let delta = ui.button("Delta Time");
+            let suspension = ui.button("Suspension Telemetry");
             
             ui.add_space(SPACING);
             let p = &socket.address;
@@ -515,10 +406,10 @@ fn main_menu(
             if tires.clicked() {
                 next_state.set(DisplayState::Tires);
             }
-            
-            if delta.clicked() {
-                next_state.set(DisplayState::Delta);
+            if suspension.clicked() {
+                next_state.set(DisplayState::Suspension);
             }
+            
             
         });
             

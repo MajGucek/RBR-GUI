@@ -47,12 +47,12 @@ pub struct Damper {
 
 #[derive(Deserialize, Default)]
 pub struct Suspension {
-    pub spring_deflection: f32,
-    pub rollbar_force: f32,
-    pub spring_force: f32,
-    pub damper_force: f32,
-    pub strut_force: f32,
-    pub helper_spring_is_active: i32,
+    pub spring_deflection: f32, 
+    pub rollbar_force: f32, // [N], -1.52779
+    pub spring_force: f32, // [N], 3684.53
+    pub damper_force: f32, // [N], 0.00844441
+    pub strut_force: f32, // [N], -3682.99
+    pub helper_spring_is_active: i32, // [""], bool?
     pub damper: Damper,
     pub wheel: Wheel,
 }
